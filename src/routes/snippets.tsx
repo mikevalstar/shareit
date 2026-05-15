@@ -1,10 +1,10 @@
+import { and, asc, eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
-import { eq, asc, and, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "../db";
+import { isAuthed, requireAuth } from "../lib/auth";
 import { newId, newSlug } from "../lib/ids";
 import { track } from "../lib/track";
-import { requireAuth, isAuthed } from "../lib/auth";
 import { NewSnippet, SnippetView } from "../views/pages";
 
 export const snippetsAdmin = new Hono();
@@ -12,7 +12,11 @@ snippetsAdmin.use("*", requireAuth);
 
 snippetsAdmin.get("/new/snippet", (c) => c.html(<NewSnippet />));
 
-const slugSchema = z.string().regex(/^[a-zA-Z0-9_-]{1,40}$/).optional().or(z.literal(""));
+const slugSchema = z
+  .string()
+  .regex(/^[a-zA-Z0-9_-]{1,40}$/)
+  .optional()
+  .or(z.literal(""));
 
 snippetsAdmin.post("/new/snippet", async (c) => {
   const form = await c.req.parseBody({ all: true });

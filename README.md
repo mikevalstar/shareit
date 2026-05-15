@@ -29,7 +29,7 @@ bun run db:push
 bun dev
 ```
 
-Visit `http://localhost:3000`, log in, and start sharing.
+Visit `http://localhost:3213`, log in, and start sharing.
 
 ## Routes
 

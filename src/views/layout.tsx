@@ -1,36 +1,75 @@
 import type { FC, PropsWithChildren } from "hono/jsx";
 
-export const Layout: FC<PropsWithChildren<{ title?: string; authed?: boolean }>> = ({ title, authed, children }) => (
+export type NavKey = "home" | "links" | "files" | "snippets" | "dashboard" | null;
+
+export const Layout: FC<
+  PropsWithChildren<{ title?: string; authed?: boolean; active?: NavKey }>
+> = ({ title, authed, active, children }) => (
   <html lang="en">
     <head>
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>{title ? `${title} · shareit` : "shareit"}</title>
       <link rel="stylesheet" href="/static/app.css" />
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/github-dark.min.css" />
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/atom-one-dark.min.css"
+      />
     </head>
-    <body class="min-h-screen bg-zinc-950 text-zinc-100 antialiased">
-      <header class="border-b border-zinc-800">
-        <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <a href="/" class="font-semibold tracking-tight">shareit</a>
-          <nav class="flex gap-4 text-sm text-zinc-400">
+    <body class="pt-16">
+      <div id="top-nav-wrapper" class="nav-wrapper">
+        <header class="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-4">
+          <h1 class="font-display text-2xl">
+            <a href="/" class="text-(--color-text) hover:text-(--color-primary) transition-colors">
+              shareit
+            </a>
+          </h1>
+          <nav class="flex items-center gap-6">
             {authed ? (
               <>
-                <a class="hover:text-zinc-100" href="/admin">Dashboard</a>
-                <a class="hover:text-zinc-100" href="/admin/new/shortlink">Link</a>
-                <a class="hover:text-zinc-100" href="/admin/new/file">File</a>
-                <a class="hover:text-zinc-100" href="/admin/new/snippet">Snippet</a>
+                <a class={navCls("dashboard", active)} href="/admin">
+                  Dashboard
+                </a>
+                <a class={navCls("links", active)} href="/admin/links">
+                  Links
+                </a>
+                <a class={navCls("files", active)} href="/admin/files">
+                  Files
+                </a>
+                <a class={navCls("snippets", active)} href="/admin/snippets">
+                  Snippets
+                </a>
                 <form method="post" action="/logout" class="inline">
-                  <button class="hover:text-zinc-100" type="submit">Logout</button>
+                  <button class="nav-cta" type="submit">
+                    Logout
+                  </button>
                 </form>
               </>
             ) : (
-              <a class="hover:text-zinc-100" href="/login">Login</a>
+              <a class="nav-cta" href="/login">
+                Login
+              </a>
             )}
           </nav>
-        </div>
-      </header>
-      <main class="mx-auto max-w-5xl px-4 py-8">{children}</main>
+        </header>
+      </div>
+      <main class="mx-auto max-w-[1100px] px-6 py-10">{children}</main>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            const w = document.getElementById('top-nav-wrapper');
+            if (w) {
+              const upd = () => w.classList.toggle('scrolled', window.scrollY > 10);
+              upd();
+              window.addEventListener('scroll', upd, { passive: true });
+            }
+          `,
+        }}
+      />
     </body>
   </html>
 );
+
+function navCls(key: NavKey, active: NavKey | undefined) {
+  return `nav-link${active === key ? " active" : ""}`;
+}

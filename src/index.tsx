@@ -1,15 +1,18 @@
 import { Hono } from "hono";
 import { serveStatic } from "hono/bun";
-import { isAuthed, verifyPassword, createSession, destroySession } from "./lib/auth";
-import { Home, Login } from "./views/pages";
+import { createSession, destroySession, isAuthed, verifyPassword } from "./lib/auth";
 import { admin } from "./routes/admin";
-import { shortlinksAdmin, shortlinkPublic } from "./routes/shortlinks";
-import { filesAdmin, filePublic } from "./routes/files";
-import { snippetsAdmin, snippetPublic } from "./routes/snippets";
+import { filePublic, filesAdmin } from "./routes/files";
+import { shortlinkPublic, shortlinksAdmin } from "./routes/shortlinks";
+import { snippetPublic, snippetsAdmin } from "./routes/snippets";
+import { Home, Login } from "./views/pages";
 
 const app = new Hono();
 
-app.use("/static/*", serveStatic({ root: "./public", rewriteRequestPath: (p) => p.replace(/^\/static/, "") }));
+app.use(
+  "/static/*",
+  serveStatic({ root: "./public", rewriteRequestPath: (p) => p.replace(/^\/static/, "") }),
+);
 
 app.get("/", async (c) => c.html(<Home authed={await isAuthed(c)} />));
 

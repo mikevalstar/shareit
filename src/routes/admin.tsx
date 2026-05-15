@@ -1,5 +1,5 @@
+import { and, desc, eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
-import { desc, eq, and, sql } from "drizzle-orm";
 import { db, schema } from "../db";
 import { requireAuth } from "../lib/auth";
 import { Dashboard } from "../views/pages";
@@ -8,7 +8,11 @@ export const admin = new Hono();
 admin.use("*", requireAuth);
 
 admin.get("/", (c) => {
-  const links = db.select().from(schema.shortlinks).orderBy(desc(schema.shortlinks.createdAt)).all();
+  const links = db
+    .select()
+    .from(schema.shortlinks)
+    .orderBy(desc(schema.shortlinks.createdAt))
+    .all();
   const files = db.select().from(schema.files).orderBy(desc(schema.files.createdAt)).all();
   const snippets = db.select().from(schema.snippets).orderBy(desc(schema.snippets.createdAt)).all();
 
@@ -18,6 +22,8 @@ admin.get("/", (c) => {
       .from(schema.events)
       .where(and(eq(schema.events.kind, kind), eq(schema.events.resourceId, id)))
       .get()?.n ?? 0;
+
+  const totalEvents = db.select({ n: sql<number>`count(*)` }).from(schema.events).get()?.n ?? 0;
 
   const items = [
     ...links.map((l) => ({
@@ -43,5 +49,15 @@ admin.get("/", (c) => {
     })),
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  return c.html(<Dashboard items={items} />);
+  return c.html(
+    <Dashboard
+      items={items}
+      stats={{
+        links: links.length,
+        files: files.length,
+        snippets: snippets.length,
+        events: totalEvents,
+      }}
+    />,
+  );
 });

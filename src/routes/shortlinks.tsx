@@ -1,10 +1,10 @@
-import { Hono } from "hono";
 import { eq } from "drizzle-orm";
+import { Hono } from "hono";
 import { z } from "zod";
 import { db, schema } from "../db";
+import { requireAuth } from "../lib/auth";
 import { newId, newSlug } from "../lib/ids";
 import { track } from "../lib/track";
-import { requireAuth } from "../lib/auth";
 import { NewShortlink } from "../views/pages";
 
 export const shortlinksAdmin = new Hono();
@@ -15,7 +15,11 @@ shortlinksAdmin.get("/new/shortlink", (c) => c.html(<NewShortlink />));
 
 const createSchema = z.object({
   target: z.string().url(),
-  slug: z.string().regex(/^[a-zA-Z0-9_-]{1,40}$/).optional().or(z.literal("")),
+  slug: z
+    .string()
+    .regex(/^[a-zA-Z0-9_-]{1,40}$/)
+    .optional()
+    .or(z.literal("")),
   title: z.string().max(200).optional().or(z.literal("")),
 });
 

@@ -7,4 +7,11 @@ if (!pw) {
 }
 
 const hash = await argon2.hash(pw, { type: argon2.argon2id });
-console.log(hash);
+// Bun's .env loader expands $VAR refs even inside quotes; only \$ escapes.
+const escaped = hash.replaceAll("$", "\\$");
+
+console.log("");
+console.log("Paste this line into your .env (backslash escapes the $ refs):");
+console.log("");
+console.log(`ADMIN_PASSWORD_HASH=${escaped}`);
+console.log("");

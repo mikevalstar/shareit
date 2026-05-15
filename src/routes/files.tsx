@@ -1,12 +1,12 @@
-import { Hono } from "hono";
-import { eq } from "drizzle-orm";
-import { z } from "zod";
 import { mkdir } from "node:fs/promises";
-import { join, extname } from "node:path";
+import { extname, join } from "node:path";
+import { eq } from "drizzle-orm";
+import { Hono } from "hono";
+import { z } from "zod";
 import { db, schema } from "../db";
+import { requireAuth } from "../lib/auth";
 import { newId, newSlug } from "../lib/ids";
 import { track } from "../lib/track";
-import { requireAuth } from "../lib/auth";
 import { NewFile } from "../views/pages";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./uploads";
@@ -16,7 +16,11 @@ filesAdmin.use("*", requireAuth);
 
 filesAdmin.get("/new/file", (c) => c.html(<NewFile />));
 
-const slugSchema = z.string().regex(/^[a-zA-Z0-9_-]{1,40}$/).optional().or(z.literal(""));
+const slugSchema = z
+  .string()
+  .regex(/^[a-zA-Z0-9_-]{1,40}$/)
+  .optional()
+  .or(z.literal(""));
 
 filesAdmin.post("/new/file", async (c) => {
   const form = await c.req.parseBody();
