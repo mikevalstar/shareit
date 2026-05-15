@@ -20,10 +20,10 @@ export const Dashboard: FC<{
         <a href="/admin/links" class="btn btn-primary">
           + Link
         </a>
-        <a href="/admin/new/file" class="btn btn-ghost">
+        <a href="/admin/files" class="btn btn-ghost">
           + File
         </a>
-        <a href="/admin/new/snippet" class="btn btn-ghost">
+        <a href="/admin/snippets" class="btn btn-ghost">
           + Snippet
         </a>
       </div>

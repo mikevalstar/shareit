@@ -24,7 +24,18 @@ export const NewSnippet: FC = () => (
   <FormPage title="New snippet" active="snippets" wide>
     <form method="post" action="/admin/new/snippet" class="space-y-5">
       <Field label="Title (optional)" name="title" placeholder="My snippet" />
-      <Field label="Description (optional)" name="description" />
+      <div>
+        <label class="label" for="description">
+          Description (optional)
+        </label>
+        <textarea
+          id="description"
+          name="description"
+          rows={4}
+          placeholder="What is this snippet for?"
+          class="input"
+        />
+      </div>
       <Field label="Custom slug (optional)" name="slug" placeholder="my-snippet" />
 
       <div>

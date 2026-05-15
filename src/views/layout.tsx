@@ -17,10 +17,6 @@ export const Layout: FC<
         href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Datatype&display=optional"
       />
       <link rel="stylesheet" href="/static/app.css" />
-      <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/atom-one-dark.min.css"
-      />
     </head>
     <body class="pt-16">
       <div id="top-nav-wrapper" class="nav-wrapper">

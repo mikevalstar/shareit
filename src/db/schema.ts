@@ -19,6 +19,7 @@ export const files = sqliteTable("files", {
   mime: text("mime").notNull(),
   size: integer("size").notNull(),
   storagePath: text("storage_path").notNull(),
+  expiresAt: integer("expires_at", { mode: "timestamp" }),
   createdAt: ts(),
 });
 
@@ -27,6 +28,7 @@ export const snippets = sqliteTable("snippets", {
   slug: text("slug").notNull().unique(),
   title: text("title"),
   description: text("description"),
+  expiresAt: integer("expires_at", { mode: "timestamp" }),
   createdAt: ts(),
 });
 

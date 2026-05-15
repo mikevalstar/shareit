@@ -39,7 +39,7 @@ Visit `http://localhost:3213`, log in, and start sharing.
 | `/login`                 | Admin login                      |
 | `/admin`                 | Dashboard with view counts       |
 | `/admin/links`           | Manage short links + create inline |
-| `/admin/new/file`        | Upload file                      |
+| `/admin/files`           | Manage files + drag-drop upload  |
 | `/admin/new/snippet`     | Create snippet (multi-file)      |
 | `/:slug`                 | Public short URL redirect        |
 | `/f/:slug`               | Public file download             |
