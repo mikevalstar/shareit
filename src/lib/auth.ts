@@ -37,7 +37,15 @@ export function destroySession(c: Context) {
   deleteCookie(c, COOKIE, { path: "/" });
 }
 
+function hasValidApiKey(c: Context): boolean {
+  const expected = process.env.ADMIN_API_KEY;
+  if (!expected) return false;
+  const presented = c.req.header("x-api-key");
+  return !!presented && presented === expected;
+}
+
 export async function isAuthed(c: Context): Promise<boolean> {
+  if (hasValidApiKey(c)) return true;
   const sid = getCookie(c, COOKIE);
   if (!sid) return false;
   const now = new Date();
@@ -50,6 +58,7 @@ export async function isAuthed(c: Context): Promise<boolean> {
 }
 
 export const requireAuth: MiddlewareHandler = async (c, next) => {
-  if (!(await isAuthed(c))) return c.redirect("/login");
-  await next();
+  if (await isAuthed(c)) return next();
+  if (c.req.header("x-api-key")) return c.text("Unauthorized", 401);
+  return c.redirect("/login");
 };

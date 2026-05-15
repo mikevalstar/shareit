@@ -121,6 +121,126 @@ export const ClipboardScript: FC = () => (
   </>
 );
 
+export type PageMetaView = {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  q: string;
+  basePath: string;
+};
+
+function pageHref(basePath: string, page: number, q: string): string {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (q) params.set("q", q);
+  const qs = params.toString();
+  return qs ? `${basePath}?${qs}` : basePath;
+}
+
+export const FilterRow: FC<{
+  basePath: string;
+  q: string;
+  placeholder?: string;
+  total: number;
+  noun: string;
+}> = ({ basePath, q, placeholder, total, noun }) => (
+  <form
+    method="get"
+    action={basePath}
+    class="filter-row flex flex-wrap items-center gap-3 border-b border-(--color-border-soft) px-5 py-3"
+  >
+    <input
+      type="search"
+      name="q"
+      value={q}
+      placeholder={placeholder ?? "Search…"}
+      class="input filter-input"
+      autocomplete="off"
+    />
+    <button type="submit" class="btn btn-sm">
+      Filter
+    </button>
+    {q && (
+      <a href={basePath} class="btn btn-sm btn-ghost">
+        Clear
+      </a>
+    )}
+    <span class="ml-auto text-sm text-(--color-text-soft)">
+      {total} {total === 1 ? noun : `${noun}s`}
+      {q && " match"}
+    </span>
+  </form>
+);
+
+export const Pagination: FC<{ meta: PageMetaView }> = ({ meta }) => {
+  if (meta.totalPages <= 1) return null;
+  const { page, totalPages, basePath, q, total, pageSize } = meta;
+  const start = (page - 1) * pageSize + 1;
+  const end = Math.min(page * pageSize, total);
+  const window = pageWindow(page, totalPages);
+  return (
+    <nav class="pagination" aria-label="Pagination">
+      <span class="pagination-range">
+        {start}–{end} of {total}
+      </span>
+      <div class="pagination-pages">
+        <PageLink basePath={basePath} page={page - 1} q={q} disabled={page <= 1} label="‹ Prev" />
+        {window.map((p) =>
+          p === "…" ? (
+            <span class="pagination-gap">…</span>
+          ) : (
+            <PageLink basePath={basePath} page={p} q={q} active={p === page} label={String(p)} />
+          ),
+        )}
+        <PageLink
+          basePath={basePath}
+          page={page + 1}
+          q={q}
+          disabled={page >= totalPages}
+          label="Next ›"
+        />
+      </div>
+    </nav>
+  );
+};
+
+const PageLink: FC<{
+  basePath: string;
+  page: number;
+  q: string;
+  active?: boolean;
+  disabled?: boolean;
+  label: string;
+}> = ({ basePath, page, q, active, disabled, label }) => {
+  if (disabled) return <span class="pagination-link disabled">{label}</span>;
+  return (
+    <a
+      href={pageHref(basePath, page, q)}
+      class={`pagination-link${active ? " active" : ""}`}
+      aria-current={active ? "page" : undefined}
+    >
+      {label}
+    </a>
+  );
+};
+
+function pageWindow(current: number, total: number): (number | "…")[] {
+  const out: (number | "…")[] = [];
+  const add = (n: number | "…") => {
+    if (out[out.length - 1] !== n) out.push(n);
+  };
+  const push = (n: number) => {
+    if (n >= 1 && n <= total) add(n);
+  };
+  push(1);
+  if (current - 2 > 2) add("…");
+  for (let p = current - 1; p <= current + 1; p++) push(p);
+  if (current + 2 < total - 1) add("…");
+  push(total);
+  return out;
+}
+
 export function escapeHtml(s: string) {
   return s.replace(
     /[&<>"']/g,

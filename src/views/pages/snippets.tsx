@@ -2,7 +2,15 @@ import type { FC } from "hono/jsx";
 import { fullUrl } from "../../lib/config";
 import { formatNumber, timeAgo } from "../../lib/format";
 import { Layout } from "../layout";
-import { ClipboardScript, CopyIcon, PlusIcon, Sparkline } from "./_shared";
+import {
+  ClipboardScript,
+  CopyIcon,
+  FilterRow,
+  type PageMetaView,
+  Pagination,
+  PlusIcon,
+  Sparkline,
+} from "./_shared";
 
 export type SnippetRow = {
   id: string;
@@ -15,7 +23,11 @@ export type SnippetRow = {
   spark: number[];
 };
 
-export const Snippets: FC<{ rows: SnippetRow[]; now: Date }> = ({ rows, now }) => (
+export const Snippets: FC<{ rows: SnippetRow[]; now: Date; meta: PageMetaView }> = ({
+  rows,
+  now,
+  meta,
+}) => (
   <Layout title="Snippets" authed active="snippets">
     <header class="page-header">
       <div>
@@ -29,6 +41,13 @@ export const Snippets: FC<{ rows: SnippetRow[]; now: Date }> = ({ rows, now }) =
     </header>
 
     <section class="card overflow-hidden">
+      <FilterRow
+        basePath="/admin/snippets"
+        q={meta.q}
+        placeholder="Search slug, title, or description…"
+        total={meta.total}
+        noun="snippet"
+      />
       <table class="data-table">
         <thead>
           <tr>
@@ -90,9 +109,15 @@ export const Snippets: FC<{ rows: SnippetRow[]; now: Date }> = ({ rows, now }) =
             <tr>
               <td colspan={7}>
                 <div class="empty-state">
-                  <p class="empty-title">No snippets yet</p>
+                  <p class="empty-title">{meta.q ? "No matches" : "No snippets yet"}</p>
                   <p>
-                    Hit <span class="kbd">+ New snippet</span> to paste your first one.
+                    {meta.q ? (
+                      "Try a different search term, or clear the filter."
+                    ) : (
+                      <>
+                        Hit <span class="kbd">+ New snippet</span> to paste your first one.
+                      </>
+                    )}
                   </p>
                 </div>
               </td>
@@ -100,6 +125,7 @@ export const Snippets: FC<{ rows: SnippetRow[]; now: Date }> = ({ rows, now }) =
           )}
         </tbody>
       </table>
+      <Pagination meta={meta} />
     </section>
 
     <ClipboardScript />

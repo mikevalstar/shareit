@@ -2,7 +2,14 @@ import type { FC } from "hono/jsx";
 import { fullUrl, siteUrl } from "../../lib/config";
 import { formatNumber, timeAgo } from "../../lib/format";
 import { Layout } from "../layout";
-import { ClipboardScript, CopyIcon, Sparkline } from "./_shared";
+import {
+  ClipboardScript,
+  CopyIcon,
+  FilterRow,
+  type PageMetaView,
+  Pagination,
+  Sparkline,
+} from "./_shared";
 
 export type LinkRow = {
   id: string;
@@ -15,11 +22,12 @@ export type LinkRow = {
   spark: number[];
 };
 
-export const Links: FC<{ rows: LinkRow[]; suggestedSlug: string; now: Date }> = ({
-  rows,
-  suggestedSlug,
-  now,
-}) => {
+export const Links: FC<{
+  rows: LinkRow[];
+  suggestedSlug: string;
+  now: Date;
+  meta: PageMetaView;
+}> = ({ rows, suggestedSlug, now, meta }) => {
   const host = hostOf(siteUrl);
   return (
     <Layout title="Links" authed active="links">
@@ -30,7 +38,7 @@ export const Links: FC<{ rows: LinkRow[]; suggestedSlug: string; now: Date }> = 
           <p class="lede">Paste a long URL, give it a memorable slug, and watch where it lands.</p>
         </div>
         <span class="text-sm text-(--color-text-soft)">
-          {rows.length} {rows.length === 1 ? "link" : "links"}
+          {meta.total} {meta.total === 1 ? "link" : "links"}
         </span>
       </header>
 
@@ -84,6 +92,13 @@ export const Links: FC<{ rows: LinkRow[]; suggestedSlug: string; now: Date }> = 
       </section>
 
       <section class="card mt-8 overflow-hidden">
+        <FilterRow
+          basePath="/admin/links"
+          q={meta.q}
+          placeholder="Search slug, target, or title…"
+          total={meta.total}
+          noun="link"
+        />
         <table class="data-table">
           <thead>
             <tr>
@@ -145,14 +160,19 @@ export const Links: FC<{ rows: LinkRow[]; suggestedSlug: string; now: Date }> = 
               <tr>
                 <td colspan={6}>
                   <div class="empty-state">
-                    <p class="empty-title">No short links yet</p>
-                    <p>Create your first one with the form above.</p>
+                    <p class="empty-title">{meta.q ? "No matches" : "No short links yet"}</p>
+                    <p>
+                      {meta.q
+                        ? "Try a different search term, or clear the filter."
+                        : "Create your first one with the form above."}
+                    </p>
                   </div>
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+        <Pagination meta={meta} />
       </section>
 
       <ClipboardScript />

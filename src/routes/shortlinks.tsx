@@ -1,9 +1,10 @@
-import { and, desc, eq, gte, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, like, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { db, schema } from "../db";
 import { requireAuth } from "../lib/auth";
 import { newId, newSlug } from "../lib/ids";
+import { buildPageMeta, likePattern, readPageQuery } from "../lib/pagination";
 import { track } from "../lib/track";
 import { type LinkRow, Links } from "../views/pages";
 
@@ -22,27 +23,50 @@ const createSchema = z.object({
 });
 
 shortlinksAdmin.get("/links", (c) => {
+  const pq = readPageQuery(c);
+  const where = pq.q
+    ? or(
+        like(schema.shortlinks.slug, likePattern(pq.q)),
+        like(schema.shortlinks.target, likePattern(pq.q)),
+        like(schema.shortlinks.title, likePattern(pq.q)),
+      )
+    : undefined;
+
+  const total =
+    db.select({ n: sql<number>`count(*)` }).from(schema.shortlinks).where(where).get()?.n ?? 0;
+
   const links = db
     .select()
     .from(schema.shortlinks)
+    .where(where)
     .orderBy(desc(schema.shortlinks.createdAt))
+    .limit(pq.limit)
+    .offset(pq.offset)
     .all();
 
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const ids = links.map((l) => l.id);
 
-  // Bucket events per (resource_id, day) for the last 7 days in one query.
   const dayExpr = sql<string>`strftime('%Y-%m-%d', ${schema.events.createdAt}, 'unixepoch')`;
-  const buckets = db
-    .select({
-      resourceId: schema.events.resourceId,
-      day: dayExpr,
-      n: sql<number>`count(*)`,
-    })
-    .from(schema.events)
-    .where(and(eq(schema.events.kind, "shortlink"), gte(schema.events.createdAt, sevenDaysAgo)))
-    .groupBy(schema.events.resourceId, dayExpr)
-    .all();
+  const buckets = ids.length
+    ? db
+        .select({
+          resourceId: schema.events.resourceId,
+          day: dayExpr,
+          n: sql<number>`count(*)`,
+        })
+        .from(schema.events)
+        .where(
+          and(
+            eq(schema.events.kind, "shortlink"),
+            gte(schema.events.createdAt, sevenDaysAgo),
+            inArray(schema.events.resourceId, ids),
+          ),
+        )
+        .groupBy(schema.events.resourceId, dayExpr)
+        .all()
+    : [];
 
   const days: string[] = [];
   for (let i = 6; i >= 0; i--) {
@@ -55,15 +79,17 @@ shortlinksAdmin.get("/links", (c) => {
     byResource.get(b.resourceId)!.set(b.day, b.n);
   }
 
-  const totals = db
-    .select({
-      resourceId: schema.events.resourceId,
-      n: sql<number>`count(*)`,
-    })
-    .from(schema.events)
-    .where(eq(schema.events.kind, "shortlink"))
-    .groupBy(schema.events.resourceId)
-    .all();
+  const totals = ids.length
+    ? db
+        .select({
+          resourceId: schema.events.resourceId,
+          n: sql<number>`count(*)`,
+        })
+        .from(schema.events)
+        .where(and(eq(schema.events.kind, "shortlink"), inArray(schema.events.resourceId, ids)))
+        .groupBy(schema.events.resourceId)
+        .all()
+    : [];
   const totalByResource = new Map(totals.map((t) => [t.resourceId, t.n]));
 
   const rows: LinkRow[] = links.map((l) => {
@@ -80,7 +106,8 @@ shortlinksAdmin.get("/links", (c) => {
     };
   });
 
-  return c.html(<Links rows={rows} suggestedSlug={newSlug()} now={now} />);
+  const meta = buildPageMeta("/admin/links", pq, total);
+  return c.html(<Links rows={rows} suggestedSlug={newSlug()} now={now} meta={meta} />);
 });
 
 shortlinksAdmin.post("/links", async (c) => {

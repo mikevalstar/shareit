@@ -1,9 +1,10 @@
-import { and, asc, desc, eq, gte, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNull, like, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { db, schema } from "../db";
 import { isAuthed, requireAuth } from "../lib/auth";
 import { newId, newSlug } from "../lib/ids";
+import { buildPageMeta, likePattern, readPageQuery } from "../lib/pagination";
 import { track } from "../lib/track";
 import { NewSnippet, type SnippetRow, Snippets, SnippetView } from "../views/pages";
 import { renderSnippetFiles } from "../views/pages/snippet-view";
@@ -18,32 +19,63 @@ const slugSchema = z
   .or(z.literal(""));
 
 snippetsAdmin.get("/snippets", (c) => {
-  const all = db.select().from(schema.snippets).orderBy(desc(schema.snippets.createdAt)).all();
+  const pq = readPageQuery(c);
+  const where = pq.q
+    ? or(
+        like(schema.snippets.slug, likePattern(pq.q)),
+        like(schema.snippets.title, likePattern(pq.q)),
+        like(schema.snippets.description, likePattern(pq.q)),
+      )
+    : undefined;
+
+  const total =
+    db.select({ n: sql<number>`count(*)` }).from(schema.snippets).where(where).get()?.n ?? 0;
+
+  const all = db
+    .select()
+    .from(schema.snippets)
+    .where(where)
+    .orderBy(desc(schema.snippets.createdAt))
+    .limit(pq.limit)
+    .offset(pq.offset)
+    .all();
 
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const ids = all.map((s) => s.id);
 
-  const fileCounts = db
-    .select({
-      snippetId: schema.snippetFiles.snippetId,
-      n: sql<number>`count(*)`,
-    })
-    .from(schema.snippetFiles)
-    .groupBy(schema.snippetFiles.snippetId)
-    .all();
+  const fileCounts = ids.length
+    ? db
+        .select({
+          snippetId: schema.snippetFiles.snippetId,
+          n: sql<number>`count(*)`,
+        })
+        .from(schema.snippetFiles)
+        .where(inArray(schema.snippetFiles.snippetId, ids))
+        .groupBy(schema.snippetFiles.snippetId)
+        .all()
+    : [];
   const countBySnippet = new Map(fileCounts.map((f) => [f.snippetId, f.n]));
 
   const dayExpr = sql<string>`strftime('%Y-%m-%d', ${schema.events.createdAt}, 'unixepoch')`;
-  const buckets = db
-    .select({
-      resourceId: schema.events.resourceId,
-      day: dayExpr,
-      n: sql<number>`count(*)`,
-    })
-    .from(schema.events)
-    .where(and(eq(schema.events.kind, "snippet"), gte(schema.events.createdAt, sevenDaysAgo)))
-    .groupBy(schema.events.resourceId, dayExpr)
-    .all();
+  const buckets = ids.length
+    ? db
+        .select({
+          resourceId: schema.events.resourceId,
+          day: dayExpr,
+          n: sql<number>`count(*)`,
+        })
+        .from(schema.events)
+        .where(
+          and(
+            eq(schema.events.kind, "snippet"),
+            gte(schema.events.createdAt, sevenDaysAgo),
+            inArray(schema.events.resourceId, ids),
+          ),
+        )
+        .groupBy(schema.events.resourceId, dayExpr)
+        .all()
+    : [];
 
   const days: string[] = [];
   for (let i = 6; i >= 0; i--) {
@@ -56,12 +88,14 @@ snippetsAdmin.get("/snippets", (c) => {
     byResource.get(b.resourceId)!.set(b.day, b.n);
   }
 
-  const totals = db
-    .select({ resourceId: schema.events.resourceId, n: sql<number>`count(*)` })
-    .from(schema.events)
-    .where(eq(schema.events.kind, "snippet"))
-    .groupBy(schema.events.resourceId)
-    .all();
+  const totals = ids.length
+    ? db
+        .select({ resourceId: schema.events.resourceId, n: sql<number>`count(*)` })
+        .from(schema.events)
+        .where(and(eq(schema.events.kind, "snippet"), inArray(schema.events.resourceId, ids)))
+        .groupBy(schema.events.resourceId)
+        .all()
+    : [];
   const totalByResource = new Map(totals.map((t) => [t.resourceId, t.n]));
 
   const rows: SnippetRow[] = all.map((s) => {
@@ -78,7 +112,8 @@ snippetsAdmin.get("/snippets", (c) => {
     };
   });
 
-  return c.html(<Snippets rows={rows} now={now} />);
+  const meta = buildPageMeta("/admin/snippets", pq, total);
+  return c.html(<Snippets rows={rows} now={now} meta={meta} />);
 });
 
 snippetsAdmin.get("/new/snippet", (c) => c.html(<NewSnippet />));

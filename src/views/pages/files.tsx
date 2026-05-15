@@ -2,7 +2,14 @@ import type { FC } from "hono/jsx";
 import { fullUrl, siteUrl } from "../../lib/config";
 import { formatNumber, formatSize, timeAgo } from "../../lib/format";
 import { Layout } from "../layout";
-import { ClipboardScript, CopyIcon, Sparkline } from "./_shared";
+import {
+  ClipboardScript,
+  CopyIcon,
+  FilterRow,
+  type PageMetaView,
+  Pagination,
+  Sparkline,
+} from "./_shared";
 
 export type FileRow = {
   id: string;
@@ -16,11 +23,12 @@ export type FileRow = {
   spark: number[];
 };
 
-export const Files: FC<{ rows: FileRow[]; suggestedSlug: string; now: Date }> = ({
-  rows,
-  suggestedSlug,
-  now,
-}) => {
+export const Files: FC<{
+  rows: FileRow[];
+  suggestedSlug: string;
+  now: Date;
+  meta: PageMetaView;
+}> = ({ rows, suggestedSlug, now, meta }) => {
   const host = hostOf(siteUrl);
   return (
     <Layout title="Files" authed active="files">
@@ -33,7 +41,7 @@ export const Files: FC<{ rows: FileRow[]; suggestedSlug: string; now: Date }> = 
           </p>
         </div>
         <span class="text-sm text-(--color-text-soft)">
-          {rows.length} {rows.length === 1 ? "file" : "files"}
+          {meta.total} {meta.total === 1 ? "file" : "files"}
         </span>
       </header>
 
@@ -83,6 +91,13 @@ export const Files: FC<{ rows: FileRow[]; suggestedSlug: string; now: Date }> = 
       </section>
 
       <section class="card mt-8 overflow-hidden">
+        <FilterRow
+          basePath="/admin/files"
+          q={meta.q}
+          placeholder="Search slug, filename, or mime…"
+          total={meta.total}
+          noun="file"
+        />
         <table class="data-table">
           <thead>
             <tr>
@@ -148,14 +163,19 @@ export const Files: FC<{ rows: FileRow[]; suggestedSlug: string; now: Date }> = 
               <tr>
                 <td colspan={7}>
                   <div class="empty-state">
-                    <p class="empty-title">No files yet</p>
-                    <p>Upload one above — or drop it anywhere on this page.</p>
+                    <p class="empty-title">{meta.q ? "No matches" : "No files yet"}</p>
+                    <p>
+                      {meta.q
+                        ? "Try a different search term, or clear the filter."
+                        : "Upload one above — or drop it anywhere on this page."}
+                    </p>
                   </div>
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+        <Pagination meta={meta} />
       </section>
 
       <div id="dropzone" class="dropzone">

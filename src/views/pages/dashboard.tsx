@@ -5,6 +5,9 @@ import { Layout } from "../layout";
 import {
   ClipboardScript,
   CopyIcon,
+  FilterRow,
+  type PageMetaView,
+  Pagination,
   PlusIcon,
   publicUrl,
   Sparkline,
@@ -27,7 +30,8 @@ export const Dashboard: FC<{
   items: AdminListItem[];
   stats: { links: number; files: number; snippets: number; events: number };
   trend: { thisWeek: number; lastWeek: number };
-}> = ({ items, stats, trend }) => {
+  meta: PageMetaView;
+}> = ({ items, stats, trend, meta }) => {
   const delta = computeDelta(trend.thisWeek, trend.lastWeek);
   const now = new Date();
   return (
@@ -66,10 +70,17 @@ export const Dashboard: FC<{
       <div class="mt-10 mb-3 flex items-baseline justify-between">
         <h2 class="font-display text-2xl">Recent shares</h2>
         <span class="text-sm text-(--color-text-soft)">
-          {items.length} {items.length === 1 ? "item" : "items"}
+          {meta.total} {meta.total === 1 ? "item" : "items"}
         </span>
       </div>
       <section class="card overflow-hidden">
+        <FilterRow
+          basePath="/admin"
+          q={meta.q}
+          placeholder="Search across links, files, snippets…"
+          total={meta.total}
+          noun="item"
+        />
         <table class="data-table">
           <thead>
             <tr>
@@ -122,14 +133,19 @@ export const Dashboard: FC<{
               <tr>
                 <td colspan={7}>
                   <div class="empty-state">
-                    <p class="empty-title">Nothing here yet</p>
-                    <p>Create your first short link, file, or snippet from the buttons above.</p>
+                    <p class="empty-title">{meta.q ? "No matches" : "Nothing here yet"}</p>
+                    <p>
+                      {meta.q
+                        ? "Try a different search term, or clear the filter."
+                        : "Create your first short link, file, or snippet from the buttons above."}
+                    </p>
                   </div>
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+        <Pagination meta={meta} />
       </section>
 
       <ClipboardScript />

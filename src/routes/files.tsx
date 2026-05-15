@@ -1,11 +1,12 @@
 import { mkdir } from "node:fs/promises";
 import { extname, join } from "node:path";
-import { and, desc, eq, gte, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, like, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { db, schema } from "../db";
 import { requireAuth } from "../lib/auth";
 import { newId, newSlug } from "../lib/ids";
+import { buildPageMeta, likePattern, readPageQuery } from "../lib/pagination";
 import { track } from "../lib/track";
 import { type FileRow, Files } from "../views/pages";
 
@@ -21,22 +22,50 @@ const slugSchema = z
   .or(z.literal(""));
 
 filesAdmin.get("/files", (c) => {
-  const all = db.select().from(schema.files).orderBy(desc(schema.files.createdAt)).all();
+  const pq = readPageQuery(c);
+  const where = pq.q
+    ? or(
+        like(schema.files.slug, likePattern(pq.q)),
+        like(schema.files.filename, likePattern(pq.q)),
+        like(schema.files.mime, likePattern(pq.q)),
+      )
+    : undefined;
+
+  const total =
+    db.select({ n: sql<number>`count(*)` }).from(schema.files).where(where).get()?.n ?? 0;
+
+  const all = db
+    .select()
+    .from(schema.files)
+    .where(where)
+    .orderBy(desc(schema.files.createdAt))
+    .limit(pq.limit)
+    .offset(pq.offset)
+    .all();
 
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const ids = all.map((f) => f.id);
 
   const dayExpr = sql<string>`strftime('%Y-%m-%d', ${schema.events.createdAt}, 'unixepoch')`;
-  const buckets = db
-    .select({
-      resourceId: schema.events.resourceId,
-      day: dayExpr,
-      n: sql<number>`count(*)`,
-    })
-    .from(schema.events)
-    .where(and(eq(schema.events.kind, "file"), gte(schema.events.createdAt, sevenDaysAgo)))
-    .groupBy(schema.events.resourceId, dayExpr)
-    .all();
+  const buckets = ids.length
+    ? db
+        .select({
+          resourceId: schema.events.resourceId,
+          day: dayExpr,
+          n: sql<number>`count(*)`,
+        })
+        .from(schema.events)
+        .where(
+          and(
+            eq(schema.events.kind, "file"),
+            gte(schema.events.createdAt, sevenDaysAgo),
+            inArray(schema.events.resourceId, ids),
+          ),
+        )
+        .groupBy(schema.events.resourceId, dayExpr)
+        .all()
+    : [];
 
   const days: string[] = [];
   for (let i = 6; i >= 0; i--) {
@@ -49,12 +78,14 @@ filesAdmin.get("/files", (c) => {
     byResource.get(b.resourceId)!.set(b.day, b.n);
   }
 
-  const totals = db
-    .select({ resourceId: schema.events.resourceId, n: sql<number>`count(*)` })
-    .from(schema.events)
-    .where(eq(schema.events.kind, "file"))
-    .groupBy(schema.events.resourceId)
-    .all();
+  const totals = ids.length
+    ? db
+        .select({ resourceId: schema.events.resourceId, n: sql<number>`count(*)` })
+        .from(schema.events)
+        .where(and(eq(schema.events.kind, "file"), inArray(schema.events.resourceId, ids)))
+        .groupBy(schema.events.resourceId)
+        .all()
+    : [];
   const totalByResource = new Map(totals.map((t) => [t.resourceId, t.n]));
 
   const rows: FileRow[] = all.map((f) => {
@@ -72,7 +103,8 @@ filesAdmin.get("/files", (c) => {
     };
   });
 
-  return c.html(<Files rows={rows} suggestedSlug={newSlug()} now={now} />);
+  const meta = buildPageMeta("/admin/files", pq, total);
+  return c.html(<Files rows={rows} suggestedSlug={newSlug()} now={now} meta={meta} />);
 });
 
 filesAdmin.post("/files", async (c) => {
