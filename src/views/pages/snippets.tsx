@@ -1,6 +1,8 @@
 import type { FC } from "hono/jsx";
 import { fullUrl } from "../../lib/config";
+import { formatNumber, timeAgo } from "../../lib/format";
 import { Layout } from "../layout";
+import { ClipboardScript, CopyIcon, PlusIcon, Sparkline } from "./_shared";
 
 export type SnippetRow = {
   id: string;
@@ -15,20 +17,18 @@ export type SnippetRow = {
 
 export const Snippets: FC<{ rows: SnippetRow[]; now: Date }> = ({ rows, now }) => (
   <Layout title="Snippets" authed active="snippets">
-    <div class="flex items-end justify-between gap-4">
+    <header class="page-header">
       <div>
         <span class="section-label">Snippets</span>
-        <h1 class="font-display text-4xl">Code snippets</h1>
-        <p class="mt-1 text-(--color-text-muted)">
-          Multi-file, syntax-highlighted snippets with view tracking.
-        </p>
+        <h1 class="font-display text-5xl">Code snippets</h1>
+        <p class="lede">Multi-file pastes with Shiki syntax highlighting and quiet view counts.</p>
       </div>
       <a href="/admin/new/snippet" class="btn btn-primary">
-        + Snippet
+        <PlusIcon /> New snippet
       </a>
-    </div>
+    </header>
 
-    <section class="card mt-6 overflow-hidden">
+    <section class="card overflow-hidden">
       <table class="data-table">
         <thead>
           <tr>
@@ -36,7 +36,7 @@ export const Snippets: FC<{ rows: SnippetRow[]; now: Date }> = ({ rows, now }) =
             <th>Title</th>
             <th class="text-right!">Files</th>
             <th class="text-right!">Views</th>
-            <th>7 days</th>
+            <th>Last 7 days</th>
             <th>Created</th>
             <th class="text-right!">Actions</th>
           </tr>
@@ -49,28 +49,32 @@ export const Snippets: FC<{ rows: SnippetRow[]; now: Date }> = ({ rows, now }) =
               <tr class={expired ? "expired" : ""}>
                 <td>
                   <div class="flex items-center gap-2">
-                    <a class="link font-mono" href={`/s/${r.slug}`} title={r.title ?? r.slug}>
-                      /s/{r.slug}
+                    <a class="slug" href={`/s/${r.slug}`} title={r.title ?? r.slug}>
+                      <span class="slug-prefix">/s/</span>
+                      {r.slug}
                     </a>
                     {expired && <span class="pill pill-muted">expired</span>}
                   </div>
                 </td>
                 <td class="max-w-xs truncate">{r.title ?? "Untitled"}</td>
                 <td class="text-right tabular-nums text-(--color-text-muted)">{r.fileCount}</td>
-                <td class="text-right tabular-nums">{r.views}</td>
+                <td class="text-right tabular-nums">{formatNumber(r.views)}</td>
                 <td>
                   <Sparkline values={r.spark} />
                 </td>
-                <td class="text-(--color-text-muted)">{r.createdAt.toISOString().slice(0, 10)}</td>
+                <td class="text-(--color-text-muted)" title={r.createdAt.toISOString()}>
+                  {timeAgo(r.createdAt, now)}
+                </td>
                 <td>
                   <div class="flex justify-end gap-2">
                     <button
                       type="button"
-                      class="btn btn-sm btn-ghost copy-btn"
+                      class="icon-btn copy-btn"
                       data-clipboard-text={url}
                       title="Copy full URL"
+                      aria-label="Copy full URL"
                     >
-                      Copy
+                      <CopyIcon />
                     </button>
                     <form method="post" action={`/admin/snippets/${r.id}/expire`} class="inline">
                       <button type="submit" class="btn btn-sm btn-danger">
@@ -84,8 +88,13 @@ export const Snippets: FC<{ rows: SnippetRow[]; now: Date }> = ({ rows, now }) =
           })}
           {rows.length === 0 && (
             <tr>
-              <td colspan={7} class="py-10 text-center text-(--color-text-muted)">
-                No snippets yet — create one above.
+              <td colspan={7}>
+                <div class="empty-state">
+                  <p class="empty-title">No snippets yet</p>
+                  <p>
+                    Hit <span class="kbd">+ New snippet</span> to paste your first one.
+                  </p>
+                </div>
               </td>
             </tr>
           )}
@@ -93,26 +102,6 @@ export const Snippets: FC<{ rows: SnippetRow[]; now: Date }> = ({ rows, now }) =
       </table>
     </section>
 
-    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js" />
-    <script
-      dangerouslySetInnerHTML={{
-        __html: `
-          const c = new ClipboardJS('.copy-btn');
-          c.on('success', (e) => {
-            const b = e.trigger;
-            const prev = b.textContent;
-            b.textContent = 'Copied';
-            setTimeout(() => { b.textContent = prev; }, 1200);
-            e.clearSelection();
-          });
-        `,
-      }}
-    />
+    <ClipboardScript />
   </Layout>
 );
-
-const Sparkline: FC<{ values: number[] }> = ({ values }) => {
-  const max = Math.max(...values, 1);
-  const norm = values.map((v) => Math.max(Math.round((v / max) * 100), 5));
-  return <span class="chart">{`{b:${norm.join(",")}}`}</span>;
-};

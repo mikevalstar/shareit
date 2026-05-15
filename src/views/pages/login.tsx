@@ -3,8 +3,15 @@ import { Layout } from "../layout";
 
 export const Login: FC<{ error?: string }> = ({ error }) => (
   <Layout title="Login">
-    <div class="mx-auto mt-10 max-w-md">
-      <div class="text-center">
+    <div class="mx-auto mt-16 max-w-md">
+      <div class="flex flex-col items-center text-center">
+        <span
+          class="brand-mark mb-4"
+          style="width: 3rem; height: 3rem; border-radius: 0.85rem; font-size: 1.4rem;"
+          aria-hidden="true"
+        >
+          /
+        </span>
         <span class="section-label">Admin access</span>
         <h1 class="font-display text-4xl">Welcome back</h1>
         <p class="mt-2 text-(--color-text-muted)">Enter your password to manage your shares.</p>
@@ -35,9 +42,9 @@ export const Login: FC<{ error?: string }> = ({ error }) => (
         </button>
       </form>
 
-      <p class="mt-6 text-center text-xs text-(--color-text-muted)">
+      <p class="mt-6 text-center text-xs text-(--color-text-soft)">
         Password is configured via{" "}
-        <code class="font-mono text-(--color-code-inline-text)">ADMIN_PASSWORD_HASH</code> env var.
+        <code class="font-mono text-(--color-code-inline-text)">ADMIN_PASSWORD_HASH</code>.
       </p>
     </div>
   </Layout>
