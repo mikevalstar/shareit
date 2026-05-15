@@ -1,0 +1,35 @@
+{
+  "name": "shareit",
+  "module": "src/index.tsx",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -n css,app -c magenta,cyan \"bun run css:dev\" \"bun run --hot src/index.tsx\"",
+    "start": "bun run src/index.tsx",
+    "build": "bun run css:build",
+    "css:dev": "tailwindcss -i ./src/styles/app.css -o ./public/app.css --watch",
+    "css:build": "tailwindcss -i ./src/styles/app.css -o ./public/app.css --minify",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "hash-password": "bun run src/scripts/hash-password.ts"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.0",
+    "@types/bun": "latest",
+    "concurrently": "^9.2.1",
+    "drizzle-kit": "^0.31.10",
+    "tailwindcss": "^4.3.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "argon2": "^0.44.0",
+    "drizzle-orm": "^0.45.2",
+    "highlight.js": "^11.11.1",
+    "hono": "^4.12.18",
+    "nanoid": "^5.1.11",
+    "zod": "^4.4.3"
+  }
+}
