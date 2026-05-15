@@ -8,6 +8,7 @@ export const shortlinks = sqliteTable("shortlinks", {
   slug: text("slug").notNull().unique(),
   target: text("target").notNull(),
   title: text("title"),
+  expiresAt: integer("expires_at", { mode: "timestamp" }),
   createdAt: ts(),
 });
 

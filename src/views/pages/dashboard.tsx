@@ -17,7 +17,7 @@ export const Dashboard: FC<{
         <p class="mt-1 text-(--color-text-muted)">Create and track everything you've shared.</p>
       </div>
       <div class="flex flex-wrap gap-2">
-        <a href="/admin/new/shortlink" class="btn btn-primary">
+        <a href="/admin/links" class="btn btn-primary">
           + Link
         </a>
         <a href="/admin/new/file" class="btn btn-ghost">

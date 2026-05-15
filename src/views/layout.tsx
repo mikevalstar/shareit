@@ -10,6 +10,12 @@ export const Layout: FC<
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>{title ? `${title} · shareit` : "shareit"}</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Datatype&display=optional"
+      />
       <link rel="stylesheet" href="/static/app.css" />
       <link
         rel="stylesheet"
@@ -20,7 +26,7 @@ export const Layout: FC<
       <div id="top-nav-wrapper" class="nav-wrapper">
         <header class="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-4">
           <h1 class="font-display text-2xl">
-            <a href="/" class="text-(--color-text) hover:text-(--color-primary) transition-colors">
+            <a href="/" class="text-(--color-text) hover:text-(--color-primary)">
               shareit
             </a>
           </h1>

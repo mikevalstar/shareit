@@ -38,7 +38,7 @@ Visit `http://localhost:3213`, log in, and start sharing.
 | `/`                      | Landing                          |
 | `/login`                 | Admin login                      |
 | `/admin`                 | Dashboard with view counts       |
-| `/admin/new/shortlink`   | Create short URL                 |
+| `/admin/links`           | Manage short links + create inline |
 | `/admin/new/file`        | Upload file                      |
 | `/admin/new/snippet`     | Create snippet (multi-file)      |
 | `/:slug`                 | Public short URL redirect        |
@@ -53,3 +53,7 @@ bun run start       # runs the server
 ```
 
 Persistent state lives in `./data` (SQLite) and `./uploads` (files). Back up both.
+
+## Notes
+
+- Sparklines on the Links page are rendered via the [Datatype font](https://franktisellano.github.io/datatype/) — a font that turns `{l:1,2,3,…}` ligatures into inline line/bar/pie charts. Loaded from Google Fonts; no JS required.
