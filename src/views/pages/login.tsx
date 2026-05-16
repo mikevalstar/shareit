@@ -1,7 +1,10 @@
 import type { FC } from "hono/jsx";
-import { Button, Card, Input, Label } from "../../components/ui";
-import { Layout } from "../layout";
-import { HeroIt, PageHero } from "./_shared";
+import { Button } from "@/components/button";
+import { Card } from "@/components/card";
+import { Input } from "@/components/input";
+import { Label } from "@/components/label";
+import { HeroIt, PageHero } from "@/components/page-hero";
+import { Layout } from "@/views/layout";
 
 export const Login: FC<{ error?: string }> = ({ error }) => (
   <Layout title="Login">

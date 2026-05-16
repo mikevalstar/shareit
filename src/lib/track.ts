@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import { db, schema } from "../db";
+import { db, schema } from "@/db";
 
 export function track(
   c: Context,

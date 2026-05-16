@@ -1,6 +1,11 @@
 import type { FC } from "hono/jsx";
-import { Card, cls, Input, Label, LinkButton, Textarea } from "../../components/ui";
-import { Field, FormPage, Submit } from "./_shared";
+import { Card } from "@/components/card";
+import { cls } from "@/components/cls";
+import { Field, FormPage, Submit } from "@/components/form-page";
+import { Input } from "@/components/input";
+import { Label } from "@/components/label";
+import { LinkButton } from "@/components/link-button";
+import { Textarea } from "@/components/textarea";
 
 const SnippetFileInput: FC<{ index: number }> = ({ index }) => (
   <Card flat class="space-y-2 p-4">

@@ -24,3 +24,16 @@ export function formatNumber(n: number): string {
 export function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
+
+export function publicUrl(kind: string, slug: string) {
+  if (kind === "shortlink") return `/${slug}`;
+  if (kind === "file") return `/f/${slug}`;
+  return `/s/${slug}`;
+}
+
+export function escapeHtml(s: string) {
+  return s.replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
+  );
+}

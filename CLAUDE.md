@@ -57,12 +57,21 @@ src/
     shortlinks.tsx    /admin/new/shortlink + public /:slug redirect
     files.tsx         /admin/new/file + public /f/:slug download
     snippets.tsx      /admin/new/snippet + public /s/:slug view
+  components/         One component per file (shadcn-style, flat). Primitives:
+                      button, link-button, icon-button, card, label, help, input,
+                      textarea, input-group, pill, kbd, brand-mark, sr-only, cls.
+                      Composites: page-hero, kind-badge, share-list, form-page,
+                      sparkline, icons, clipboard-script, pagination.
   views/
     layout.tsx        Global <html>, nav, scroll-shadow script
     pages/            One file per page; index.ts re-exports
   scripts/
     hash-password.ts  CLI: argon2id hash with $ pre-escaped for .env
 ```
+
+### Imports
+
+`tsconfig.json` defines a `@/*` → `src/*` path alias. Prefer `@/components/button`, `@/lib/format`, etc. over `../../...` chains. Bun resolves these natively at runtime (no bundler needed).
 
 ### Route mounting order matters
 
@@ -78,7 +87,7 @@ Single-user. Password lives in `ADMIN_PASSWORD_HASH` (argon2id). On login, a ses
 
 ### Styling
 
-Tailwind v4 only — `src/styles/app.css` contains nothing but `@import`, `@source`, `@view-transition`, and the `@theme {}` token block (warm light bg, blue primary, DM Sans / DM Serif Display / DM Mono). No `.btn`/`.card`/etc. component classes — reusable visual primitives live as JSX components in `src/components/ui.tsx` (`Button`, `LinkButton`, `IconButton`, `Card`, `Input`, `Textarea`, `Label`, `InputGroup`, `Pill`, `Kbd`, `BrandMark`). Each composes a Tailwind utility string; the same strings are also exported as the `cls` object for places that need raw class names (e.g. injected HTML in `<script>` blocks). Prefer these components when adding new UI to keep the look consistent. Theme colors are referenced via Tailwind v4 arbitrary-variable syntax (`bg-(--color-primary)`, `text-(--color-text-muted)`). The `copy-btn` class still appearing on action buttons is a clipboard.js JS hook, not styling.
+Tailwind v4 only — `src/styles/app.css` contains nothing but `@import`, `@source`, `@view-transition`, and the `@theme {}` token block (warm light bg, blue primary, DM Sans / DM Serif Display / DM Mono). No `.btn`/`.card`/etc. component classes — reusable visual primitives live as one-component-per-file JSX modules under `src/components/` (`Button`, `LinkButton`, `IconButton`, `Card`, `Input`, `Textarea`, `Label`, `InputGroup`, `Pill`, `Kbd`, `BrandMark`, etc.). Each composes a Tailwind utility string; the same strings are also exported from `@/components/cls` as the `cls` object for places that need raw class names (e.g. injected HTML in `<script>` blocks). Prefer these components when adding new UI to keep the look consistent. Theme colors are referenced via Tailwind v4 arbitrary-variable syntax (`bg-(--color-primary)`, `text-(--color-text-muted)`). The `copy-btn` class still appearing on action buttons is a clipboard.js JS hook, not styling.
 
 The Tailwind CLI watches `src/styles/app.css` → emits `public/app.css`, which the layout serves at `/static/app.css` via Hono's `serveStatic`.
 

@@ -1,5 +1,5 @@
 import type { FC, PropsWithChildren } from "hono/jsx";
-import { BrandMark } from "../components/ui";
+import { BrandMark } from "@/components/brand-mark";
 
 export type NavKey = "home" | "links" | "files" | "snippets" | "dashboard" | null;
 

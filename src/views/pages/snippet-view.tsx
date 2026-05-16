@@ -1,10 +1,15 @@
 import type { FC } from "hono/jsx";
 import { codeToHtml } from "shiki";
-import { Card, IconButton, Pill, SR_ONLY } from "../../components/ui";
-import { fullUrl } from "../../lib/config";
-import { formatNumber } from "../../lib/format";
-import { Layout } from "../layout";
-import { ClipboardScript, CopyIcon, escapeHtml, HeroIt, PageHero } from "./_shared";
+import { Card } from "@/components/card";
+import { ClipboardScript } from "@/components/clipboard-script";
+import { IconButton } from "@/components/icon-button";
+import { CopyIcon } from "@/components/icons";
+import { HeroIt, PageHero } from "@/components/page-hero";
+import { Pill } from "@/components/pill";
+import { SR_ONLY } from "@/components/sr-only";
+import { fullUrl } from "@/lib/config";
+import { escapeHtml, formatNumber } from "@/lib/format";
+import { Layout } from "@/views/layout";
 
 const SHIKI_LANGS = new Set([
   "bash",

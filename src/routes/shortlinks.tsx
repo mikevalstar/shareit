@@ -1,12 +1,12 @@
 import { and, desc, eq, gte, inArray, isNull, like, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import { db, schema } from "../db";
-import { requireAuth } from "../lib/auth";
-import { newId, newSlug } from "../lib/ids";
-import { buildPageMeta, likePattern, readPageQuery } from "../lib/pagination";
-import { track } from "../lib/track";
-import { type LinkRow, Links } from "../views/pages";
+import { db, schema } from "@/db";
+import { requireAuth } from "@/lib/auth";
+import { newId, newSlug } from "@/lib/ids";
+import { buildPageMeta, likePattern, readPageQuery } from "@/lib/pagination";
+import { track } from "@/lib/track";
+import { type LinkRow, Links } from "@/views/pages";
 
 export const shortlinksAdmin = new Hono();
 

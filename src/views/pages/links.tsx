@@ -1,29 +1,27 @@
 import type { FC } from "hono/jsx";
-import { Button, IconButton, Input, InputGroup, Label } from "../../components/ui";
-import { fullUrl, siteUrl } from "../../lib/config";
-import { Layout } from "../layout";
+import { Button } from "@/components/button";
+import { ClipboardScript } from "@/components/clipboard-script";
+import { IconButton } from "@/components/icon-button";
+import { ArrowUpRightIcon, CopyIcon, RotateIcon, TrashIcon } from "@/components/icons";
+import { Input } from "@/components/input";
+import { InputGroup } from "@/components/input-group";
+import { KindBadge } from "@/components/kind-badge";
+import { Label } from "@/components/label";
+import { HeroIt, PageHero } from "@/components/page-hero";
+import { type PageMetaView, Pagination, PanelSearch } from "@/components/pagination";
 import {
-  ArrowUpRightIcon,
-  ClipboardScript,
-  CopyIcon,
   CreateBar,
   EmptyState,
-  HeroIt,
-  KindBadge,
-  PageHero,
-  type PageMetaView,
-  Pagination,
-  PanelSearch,
-  RotateIcon,
   RowBody,
   RowTime,
   RowViews,
   ShareList,
   ShareListHead,
   ShareRow,
-  Sparkline,
-  TrashIcon,
-} from "./_shared";
+} from "@/components/share-list";
+import { Sparkline } from "@/components/sparkline";
+import { fullUrl, siteUrl } from "@/lib/config";
+import { Layout } from "@/views/layout";
 
 export type LinkRow = {
   id: string;

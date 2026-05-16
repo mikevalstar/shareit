@@ -2,7 +2,7 @@ import argon2 from "argon2";
 import { and, eq, gt } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
-import { db, schema } from "../db";
+import { db, schema } from "@/db";
 import { newId } from "./ids";
 
 const COOKIE = "shareit_sid";

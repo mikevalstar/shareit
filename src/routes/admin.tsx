@@ -1,9 +1,9 @@
 import { and, desc, gte, inArray, like, lt, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
-import { db, schema } from "../db";
-import { requireAuth } from "../lib/auth";
-import { buildPageMeta, likePattern, readPageQuery } from "../lib/pagination";
-import { Dashboard } from "../views/pages";
+import { db, schema } from "@/db";
+import { requireAuth } from "@/lib/auth";
+import { buildPageMeta, likePattern, readPageQuery } from "@/lib/pagination";
+import { Dashboard } from "@/views/pages";
 
 export const admin = new Hono();
 admin.use("*", requireAuth);

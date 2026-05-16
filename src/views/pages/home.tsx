@@ -1,7 +1,8 @@
 import type { FC } from "hono/jsx";
-import { BrandMark } from "../../components/ui";
-import { Layout } from "../layout";
-import { CodeIcon, FileIcon, HeroIt, LinkIcon, PageHero } from "./_shared";
+import { BrandMark } from "@/components/brand-mark";
+import { CodeIcon, FileIcon, LinkIcon } from "@/components/icons";
+import { HeroIt, PageHero } from "@/components/page-hero";
+import { Layout } from "@/views/layout";
 
 const FEATURE_MARK_BASE =
   "inline-flex h-10 w-10 items-center justify-center rounded-[0.7rem] text-white";

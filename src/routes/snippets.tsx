@@ -1,13 +1,13 @@
 import { and, asc, desc, eq, gte, inArray, isNull, like, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import { db, schema } from "../db";
-import { isAuthed, requireAuth } from "../lib/auth";
-import { newId, newSlug } from "../lib/ids";
-import { buildPageMeta, likePattern, readPageQuery } from "../lib/pagination";
-import { track } from "../lib/track";
-import { NewSnippet, type SnippetRow, Snippets, SnippetView } from "../views/pages";
-import { renderSnippetFiles } from "../views/pages/snippet-view";
+import { db, schema } from "@/db";
+import { isAuthed, requireAuth } from "@/lib/auth";
+import { newId, newSlug } from "@/lib/ids";
+import { buildPageMeta, likePattern, readPageQuery } from "@/lib/pagination";
+import { track } from "@/lib/track";
+import { NewSnippet, type SnippetRow, Snippets, SnippetView } from "@/views/pages";
+import { renderSnippetFiles } from "@/views/pages/snippet-view";
 
 export const snippetsAdmin = new Hono();
 snippetsAdmin.use("*", requireAuth);

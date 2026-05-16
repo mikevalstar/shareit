@@ -1,30 +1,23 @@
 import type { FC } from "hono/jsx";
-import { IconButton } from "../../components/ui";
-import { fullUrl } from "../../lib/config";
-import { formatNumber } from "../../lib/format";
-import { Layout } from "../layout";
+import { ClipboardScript } from "@/components/clipboard-script";
+import { IconButton } from "@/components/icon-button";
+import { ArrowUpRightIcon, CopyIcon, PlusIcon } from "@/components/icons";
+import { KindBadge } from "@/components/kind-badge";
+import { HeroIt, PageHero, PanelBars } from "@/components/page-hero";
+import { FilterRow, type PageMetaView, Pagination } from "@/components/pagination";
 import {
-  ArrowUpRightIcon,
-  ClipboardScript,
-  CopyIcon,
   EmptyState,
-  FilterRow,
-  HeroIt,
-  KindBadge,
-  PageHero,
-  type PageMetaView,
-  Pagination,
-  PanelBars,
-  PlusIcon,
-  publicUrl,
   RowBody,
   RowTime,
   RowViews,
   ShareList,
   ShareListHead,
   ShareRow,
-  Sparkline,
-} from "./_shared";
+} from "@/components/share-list";
+import { Sparkline } from "@/components/sparkline";
+import { fullUrl } from "@/lib/config";
+import { formatNumber, publicUrl } from "@/lib/format";
+import { Layout } from "@/views/layout";
 
 type AdminListItem = {
   slug: string;
