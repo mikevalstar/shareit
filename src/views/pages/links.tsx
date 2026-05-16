@@ -1,17 +1,24 @@
 import type { FC } from "hono/jsx";
 import { fullUrl, siteUrl } from "../../lib/config";
-import { formatNumber, timeAgo } from "../../lib/format";
 import { Layout } from "../layout";
 import {
   ArrowUpRightIcon,
   ClipboardScript,
   CopyIcon,
+  CreateBar,
+  EmptyState,
   KindBadge,
   PageHero,
   type PageMetaView,
   Pagination,
   PanelSearch,
   RotateIcon,
+  RowBody,
+  RowTime,
+  RowViews,
+  ShareList,
+  ShareListHead,
+  ShareRow,
   Sparkline,
   TrashIcon,
 } from "./_shared";
@@ -55,13 +62,13 @@ export const Links: FC<{
         />
       </PageHero>
 
-      <div class="share-list">
-        <section class="create-bar">
+      <ShareList>
+        <CreateBar>
           <form
             id="create-link-form"
             method="post"
             action="/admin/links"
-            class="grid gap-3 sm:grid-cols-[1.4fr_1fr_1fr_auto] items-end"
+            class="grid items-end gap-3 sm:grid-cols-[1.4fr_1fr_1fr_auto]"
           >
             <div>
               <label class="label" for="target">
@@ -94,10 +101,7 @@ export const Links: FC<{
             </div>
             <div>
               <label class="label" for="title">
-                Title{" "}
-                <span class="font-normal text-(--color-text-soft)">
-                  (override)
-                </span>
+                Title <span class="font-normal text-(--color-text-soft)">(override)</span>
               </label>
               <input
                 id="title"
@@ -114,118 +118,108 @@ export const Links: FC<{
               Create link
             </button>
           </form>
-          <div id="link-preview" class="link-preview" hidden>
-            <img id="link-preview-img" alt="" referrerpolicy="no-referrer" />
-            <div class="lp-body">
-              <div id="link-preview-title" class="lp-title" />
-              <div id="link-preview-desc" class="lp-desc" />
-              <div id="link-preview-host" class="lp-host" />
+          <div
+            id="link-preview"
+            class="mt-4 flex items-start gap-3 rounded-xl border border-(--color-border) bg-(--color-bg-sunken) p-3"
+            hidden
+          >
+            <img
+              id="link-preview-img"
+              alt=""
+              referrerpolicy="no-referrer"
+              class="h-[88px] w-[88px] shrink-0 rounded-lg bg-black/5 object-cover"
+            />
+            <div class="flex min-w-0 flex-col gap-1">
+              <div
+                id="link-preview-title"
+                class="line-clamp-2 text-base font-semibold leading-snug"
+              />
+              <div
+                id="link-preview-desc"
+                class="line-clamp-2 text-sm leading-snug text-(--color-text-soft)"
+              />
+              <div
+                id="link-preview-host"
+                class="text-xs uppercase tracking-wide text-(--color-text-soft)"
+              />
             </div>
           </div>
           <LinkPreviewScript />
-        </section>
+        </CreateBar>
 
-        <div class="share-list-head">
-          <h2>Your links</h2>
-          <span class="count">
-            {meta.total} {meta.total === 1 ? "link" : "links"}
-            {meta.q && " match"}
-          </span>
-        </div>
+        <ShareListHead title="Your links" count={meta.total} noun="link" matching={meta.q} />
 
         {rows.map((r) => {
           const url = fullUrl("shortlink", r.slug);
           const expired = !!(r.expiresAt && r.expiresAt <= now);
-          return (
-            <div class={`share-row cols-7${expired ? " expired" : ""}`}>
-              <KindBadge kind="shortlink" />
-              <a
-                class={`body-link${r.image ? " has-thumb" : ""}`}
-                href={`/${r.slug}`}
-                title={r.description ?? r.target}
-              >
-                {r.image && (
-                  <img
-                    src={r.image}
-                    alt=""
-                    loading="lazy"
-                    referrerpolicy="no-referrer"
-                    class="row-thumb"
-                  />
+          const sub =
+            r.image && (r.description || (r.title && r.pageTitle)) ? (
+              <>
+                {r.title && r.pageTitle && (
+                  <span class="font-medium text-(--color-text)">{r.pageTitle}</span>
                 )}
-                <span class="body-text">
-                  <span class="lbl">{r.title ?? r.pageTitle ?? r.target}</span>
-                  {r.image && (r.description || (r.title && r.pageTitle)) && (
-                    <span class="sub">
-                      {r.title && r.pageTitle && <span class="sub-title">{r.pageTitle}</span>}
-                      {r.title && r.pageTitle && r.description && (
-                        <span class="sub-sep"> · </span>
-                      )}
-                      {r.description && <span class="sub-desc">{r.description}</span>}
-                    </span>
-                  )}
-                  <span class="slg">
-                    <span class="pfx">/</span>
-                    {r.slug}
-                  </span>
-                </span>
-              </a>
-              <span class="meta-col">{expired ? "expired" : ""}</span>
-              <span class="sp">
-                <Sparkline values={r.spark} />
-              </span>
-              <span class="vv">
-                {formatNumber(r.views)}
-                <small>views</small>
-              </span>
-              <span class="wn">{timeAgo(r.createdAt, now)}</span>
-              <span class="actions">
-                <button
-                  type="button"
-                  class="icon-btn copy-btn"
-                  data-clipboard-text={url}
-                  title="Copy full URL"
-                  aria-label="Copy full URL"
-                >
-                  <CopyIcon />
-                </button>
-                <a
+                {r.title && r.pageTitle && r.description && <span class="opacity-60"> · </span>}
+                {r.description && <span>{r.description}</span>}
+              </>
+            ) : undefined;
+          return (
+            <ShareRow
+              expired={expired}
+              badge={<KindBadge kind="shortlink" />}
+              body={
+                <RowBody
                   href={`/${r.slug}`}
-                  class="icon-btn"
-                  title="Open"
-                  aria-label="Open"
-                >
-                  <ArrowUpRightIcon />
-                </a>
-                <form method="post" action={`/admin/links/${r.id}/expire`}>
+                  title={r.description ?? r.target}
+                  label={r.title ?? r.pageTitle ?? r.target}
+                  prefix="/"
+                  slug={r.slug}
+                  thumb={r.image}
+                  sub={sub}
+                />
+              }
+              meta={expired ? "expired" : ""}
+              spark={<Sparkline values={r.spark} />}
+              views={<RowViews count={r.views} />}
+              time={<RowTime date={r.createdAt} now={now} />}
+              actions={
+                <>
                   <button
-                    type="submit"
-                    class="icon-btn"
-                    title={expired ? "Unexpire" : "Expire"}
-                    aria-label={expired ? "Unexpire" : "Expire"}
+                    type="button"
+                    class="icon-btn copy-btn"
+                    data-clipboard-text={url}
+                    title="Copy full URL"
+                    aria-label="Copy full URL"
                   >
-                    {expired ? <RotateIcon /> : <TrashIcon />}
+                    <CopyIcon />
                   </button>
-                </form>
-              </span>
-            </div>
+                  <a href={`/${r.slug}`} class="icon-btn" title="Open" aria-label="Open">
+                    <ArrowUpRightIcon />
+                  </a>
+                  <form method="post" action={`/admin/links/${r.id}/expire`}>
+                    <button
+                      type="submit"
+                      class="icon-btn"
+                      title={expired ? "Unexpire" : "Expire"}
+                      aria-label={expired ? "Unexpire" : "Expire"}
+                    >
+                      {expired ? <RotateIcon /> : <TrashIcon />}
+                    </button>
+                  </form>
+                </>
+              }
+            />
           );
         })}
 
         {rows.length === 0 && (
-          <div class="empty-state">
-            <p class="empty-title">
-              {meta.q ? "No matches" : "No short links yet"}
-            </p>
-            <p>
-              {meta.q
-                ? "Try a different search term, or clear the filter."
-                : "Create your first one with the form above."}
-            </p>
-          </div>
+          <EmptyState title={meta.q ? "No matches" : "No short links yet"}>
+            {meta.q
+              ? "Try a different search term, or clear the filter."
+              : "Create your first one with the form above."}
+          </EmptyState>
         )}
         <Pagination meta={meta} />
-      </div>
+      </ShareList>
 
       <ClipboardScript />
     </Layout>
@@ -237,9 +231,8 @@ const LinkPreviewScript: FC = () => (
     dangerouslySetInnerHTML={{
       __html: `
         (function () {
-          console.log('[link-preview] script loaded');
           const form = document.getElementById('create-link-form');
-          if (!form) { console.warn('[link-preview] no form'); return; }
+          if (!form) return;
           const target = form.querySelector('#target');
           const titleEl = form.querySelector('#title');
           const pageTitleEl = form.querySelector('#pageTitle');
@@ -255,23 +248,16 @@ const LinkPreviewScript: FC = () => (
           let inflight = null;
           async function fetchPreview() {
             const url = target.value.trim();
-            console.log('[link-preview] fetchPreview', url);
             if (!url || url === lastFetched) return;
-            try { new URL(url); } catch { console.warn('[link-preview] invalid URL'); return; }
+            try { new URL(url); } catch { return; }
             lastFetched = url;
             if (inflight) inflight.abort();
             inflight = new AbortController();
-            target.classList.add('loading');
+            target.classList.add('animate-pulse');
             try {
               const res = await fetch('/admin/api/link-preview?url=' + encodeURIComponent(url), { signal: inflight.signal });
-              console.log('[link-preview] response', res.status);
-              if (!res.ok) {
-                const txt = await res.text();
-                console.error('[link-preview] error body', txt);
-                return;
-              }
+              if (!res.ok) return;
               const data = await res.json();
-              console.log('[link-preview] data', data);
               if (data.title) {
                 pageTitleEl.value = data.title;
                 titleEl.placeholder = data.title;
@@ -289,8 +275,8 @@ const LinkPreviewScript: FC = () => (
                 pImg.hidden = true;
               }
               preview.hidden = !(data.title || data.description || data.image);
-            } catch (e) { console.error('[link-preview] fetch threw', e); } finally {
-              target.classList.remove('loading');
+            } catch (e) {} finally {
+              target.classList.remove('animate-pulse');
             }
           }
           target.addEventListener('blur', fetchPreview);

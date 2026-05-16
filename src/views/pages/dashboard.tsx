@@ -1,11 +1,12 @@
 import type { FC } from "hono/jsx";
 import { fullUrl } from "../../lib/config";
-import { formatNumber, timeAgo } from "../../lib/format";
+import { formatNumber } from "../../lib/format";
 import { Layout } from "../layout";
 import {
   ArrowUpRightIcon,
   ClipboardScript,
   CopyIcon,
+  EmptyState,
   FilterRow,
   KindBadge,
   PageHero,
@@ -14,6 +15,12 @@ import {
   PanelBars,
   PlusIcon,
   publicUrl,
+  RowBody,
+  RowTime,
+  RowViews,
+  ShareList,
+  ShareListHead,
+  ShareRow,
   Sparkline,
 } from "./_shared";
 
@@ -95,13 +102,8 @@ export const Dashboard: FC<{
         }
       />
 
-      <div class="share-list">
-        <div class="share-list-head">
-          <h2>Recent shares</h2>
-          <span class="count">
-            {meta.total} {meta.total === 1 ? "item" : "items"}
-          </span>
-        </div>
+      <ShareList>
+        <ShareListHead title="Recent shares" count={meta.total} noun="item" />
 
         <FilterRow
           basePath="/admin"
@@ -114,64 +116,54 @@ export const Dashboard: FC<{
         {items.map((it) => {
           const url = fullUrl(it.kind, it.slug);
           return (
-            <div class="share-row">
-              <KindBadge kind={it.kind} />
-              <a
-                class="body-link"
-                href={publicUrl(it.kind, it.slug)}
-                title={url}
-              >
-                <span class="lbl">{it.label}</span>
-                <span class="slg">
-                  <span class="pfx">{prefixFor(it.kind)}</span>
-                  {it.slug}
-                </span>
-              </a>
-              <span class="sp">
-                <Sparkline values={it.spark} />
-              </span>
-              <span class="vv">
-                {formatNumber(it.views)}
-                <small>views</small>
-              </span>
-              <span class="wn">{timeAgo(it.createdAt, now)}</span>
-              <span class="actions">
-                <button
-                  type="button"
-                  class="icon-btn copy-btn"
-                  data-clipboard-text={url}
-                  title="Copy full URL"
-                  aria-label="Copy full URL"
-                >
-                  <CopyIcon />
-                </button>
-                <a
+            <ShareRow
+              badge={<KindBadge kind={it.kind} />}
+              body={
+                <RowBody
                   href={publicUrl(it.kind, it.slug)}
-                  class="icon-btn"
-                  title="Open"
-                  aria-label="Open"
-                >
-                  <ArrowUpRightIcon />
-                </a>
-              </span>
-            </div>
+                  title={url}
+                  label={it.label}
+                  prefix={prefixFor(it.kind)}
+                  slug={it.slug}
+                />
+              }
+              spark={<Sparkline values={it.spark} />}
+              views={<RowViews count={it.views} />}
+              time={<RowTime date={it.createdAt} now={now} />}
+              actions={
+                <>
+                  <button
+                    type="button"
+                    class="icon-btn copy-btn"
+                    data-clipboard-text={url}
+                    title="Copy full URL"
+                    aria-label="Copy full URL"
+                  >
+                    <CopyIcon />
+                  </button>
+                  <a
+                    href={publicUrl(it.kind, it.slug)}
+                    class="icon-btn"
+                    title="Open"
+                    aria-label="Open"
+                  >
+                    <ArrowUpRightIcon />
+                  </a>
+                </>
+              }
+            />
           );
         })}
 
         {items.length === 0 && (
-          <div class="empty-state">
-            <p class="empty-title">
-              {meta.q ? "No matches" : "Nothing here yet"}
-            </p>
-            <p>
-              {meta.q
-                ? "Try a different search term, or clear the filter."
-                : "Create your first short link, file, or snippet from the buttons above."}
-            </p>
-          </div>
+          <EmptyState title={meta.q ? "No matches" : "Nothing here yet"}>
+            {meta.q
+              ? "Try a different search term, or clear the filter."
+              : "Create your first short link, file, or snippet from the buttons above."}
+          </EmptyState>
         )}
         <Pagination meta={meta} />
-      </div>
+      </ShareList>
 
       <ClipboardScript />
     </Layout>

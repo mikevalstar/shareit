@@ -57,10 +57,16 @@ shortlinksAdmin.get("/api/link-preview", async (c) => {
     try {
       data = JSON.parse(bodyText);
     } catch {
-      return c.json({ error: "urlmeta: non-JSON response", upstreamBody: bodyText.slice(0, 500) }, 502);
+      return c.json(
+        { error: "urlmeta: non-JSON response", upstreamBody: bodyText.slice(0, 500) },
+        502,
+      );
     }
     if (data.result?.status !== "OK") {
-      return c.json({ error: `urlmeta: ${data.result?.reason ?? "non-OK"}`, upstream: data.result }, 502);
+      return c.json(
+        { error: `urlmeta: ${data.result?.reason ?? "non-OK"}`, upstream: data.result },
+        502,
+      );
     }
     const m = data.meta ?? {};
     return c.json({

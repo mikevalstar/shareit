@@ -1,17 +1,25 @@
 import type { FC } from "hono/jsx";
 import { fullUrl, siteUrl } from "../../lib/config";
-import { formatNumber, formatSize, timeAgo } from "../../lib/format";
+import { formatSize } from "../../lib/format";
 import { Layout } from "../layout";
 import {
   ArrowUpRightIcon,
   ClipboardScript,
   CopyIcon,
+  CreateBar,
+  EmptyState,
   KindBadge,
   PageHero,
   type PageMetaView,
   Pagination,
   PanelSearch,
   RotateIcon,
+  RowBody,
+  RowTime,
+  RowViews,
+  ShareList,
+  ShareListHead,
+  ShareRow,
   Sparkline,
   TrashIcon,
 } from "./_shared";
@@ -54,14 +62,14 @@ export const Files: FC<{
         />
       </PageHero>
 
-      <div class="share-list">
-        <section class="create-bar">
+      <ShareList>
+        <CreateBar>
           <form
             id="upload-form"
             method="post"
             action="/admin/files"
             enctype="multipart/form-data"
-            class="grid gap-3 sm:grid-cols-[1.4fr_1fr_auto] items-end"
+            class="grid items-end gap-3 sm:grid-cols-[1.4fr_1fr_auto]"
           >
             <div>
               <label class="label" for="file">
@@ -74,9 +82,7 @@ export const Files: FC<{
                 required
                 class="input file:mr-3 file:rounded file:border-0 file:bg-(--color-muted-bg) file:px-3 file:py-1.5 file:text-(--color-text)"
               />
-              <span class="help">
-                Tip: drop a file anywhere on this page to upload instantly.
-              </span>
+              <span class="help">Tip: drop a file anywhere on this page to upload instantly.</span>
             </div>
             <div>
               <label class="label" for="slug">
@@ -98,84 +104,70 @@ export const Files: FC<{
               Upload
             </button>
           </form>
-        </section>
+        </CreateBar>
 
-        <div class="share-list-head">
-          <h2>Your files</h2>
-          <span class="count">
-            {meta.total} {meta.total === 1 ? "file" : "files"}
-            {meta.q && " match"}
-          </span>
-        </div>
+        <ShareListHead title="Your files" count={meta.total} noun="file" matching={meta.q} />
 
         {rows.map((r) => {
           const url = fullUrl("file", r.slug);
           const expired = !!(r.expiresAt && r.expiresAt <= now);
           return (
-            <div class={`share-row cols-7${expired ? " expired" : ""}`}>
-              <KindBadge kind="file" />
-              <a class="body-link" href={`/f/${r.slug}`} title={r.filename}>
-                <span class="lbl">{r.filename}</span>
-                <span class="slg">
-                  <span class="pfx">/f/</span>
-                  {r.slug}
-                  {expired && " · expired"}
-                </span>
-              </a>
-              <span class="meta-col">{formatSize(r.size)}</span>
-              <span class="sp">
-                <Sparkline values={r.spark} />
-              </span>
-              <span class="vv">
-                {formatNumber(r.views)}
-                <small>views</small>
-              </span>
-              <span class="wn">{timeAgo(r.createdAt, now)}</span>
-              <span class="actions">
-                <button
-                  type="button"
-                  class="icon-btn copy-btn"
-                  data-clipboard-text={url}
-                  title="Copy full URL"
-                  aria-label="Copy full URL"
-                >
-                  <CopyIcon />
-                </button>
-                <a
+            <ShareRow
+              expired={expired}
+              badge={<KindBadge kind="file" />}
+              body={
+                <RowBody
                   href={`/f/${r.slug}`}
-                  class="icon-btn"
-                  title="Open"
-                  aria-label="Open"
-                >
-                  <ArrowUpRightIcon />
-                </a>
-                <form method="post" action={`/admin/files/${r.id}/expire`}>
+                  title={r.filename}
+                  label={r.filename}
+                  prefix="/f/"
+                  slug={r.slug}
+                  slugSuffix={expired ? " · expired" : ""}
+                />
+              }
+              meta={formatSize(r.size)}
+              spark={<Sparkline values={r.spark} />}
+              views={<RowViews count={r.views} />}
+              time={<RowTime date={r.createdAt} now={now} />}
+              actions={
+                <>
                   <button
-                    type="submit"
-                    class="icon-btn"
-                    title={expired ? "Unexpire" : "Expire"}
-                    aria-label={expired ? "Unexpire" : "Expire"}
+                    type="button"
+                    class="icon-btn copy-btn"
+                    data-clipboard-text={url}
+                    title="Copy full URL"
+                    aria-label="Copy full URL"
                   >
-                    {expired ? <RotateIcon /> : <TrashIcon />}
+                    <CopyIcon />
                   </button>
-                </form>
-              </span>
-            </div>
+                  <a href={`/f/${r.slug}`} class="icon-btn" title="Open" aria-label="Open">
+                    <ArrowUpRightIcon />
+                  </a>
+                  <form method="post" action={`/admin/files/${r.id}/expire`}>
+                    <button
+                      type="submit"
+                      class="icon-btn"
+                      title={expired ? "Unexpire" : "Expire"}
+                      aria-label={expired ? "Unexpire" : "Expire"}
+                    >
+                      {expired ? <RotateIcon /> : <TrashIcon />}
+                    </button>
+                  </form>
+                </>
+              }
+            />
           );
         })}
 
         {rows.length === 0 && (
-          <div class="empty-state">
-            <p class="empty-title">{meta.q ? "No matches" : "No files yet"}</p>
-            <p>
-              {meta.q
-                ? "Try a different search term, or clear the filter."
-                : "Upload one above — or drop it anywhere on this page."}
-            </p>
-          </div>
+          <EmptyState title={meta.q ? "No matches" : "No files yet"}>
+            {meta.q
+              ? "Try a different search term, or clear the filter."
+              : "Upload one above — or drop it anywhere on this page."}
+          </EmptyState>
         )}
         <Pagination meta={meta} />
-      </div>
+      </ShareList>
 
       <div id="dropzone" class="dropzone">
         <div class="dropzone-inner">
