@@ -20,6 +20,57 @@ const createSchema = z.object({
     .optional()
     .or(z.literal("")),
   title: z.string().max(200).optional().or(z.literal("")),
+  pageTitle: z.string().max(500).optional().or(z.literal("")),
+  description: z.string().max(1000).optional().or(z.literal("")),
+  image: z.string().url().max(2000).optional().or(z.literal("")),
+});
+
+shortlinksAdmin.get("/api/link-preview", async (c) => {
+  const url = c.req.query("url");
+  if (!url) return c.json({ error: "missing url" }, 400);
+  try {
+    new URL(url);
+  } catch {
+    return c.json({ error: "invalid url" }, 400);
+  }
+  const cred = process.env.URLMETA_BEARER;
+  if (!cred) return c.json({ error: "URLMETA_BEARER not configured" }, 500);
+  // urlmeta uses HTTP Basic auth. Accept either `accountID:secret` (we'll encode)
+  // or an already base64-encoded value.
+  const basic = cred.includes(":") ? Buffer.from(cred).toString("base64") : cred;
+
+  try {
+    const upstream = `https://api.urlmeta.org/?url=${encodeURIComponent(url)}`;
+    const res = await fetch(upstream, {
+      headers: { Authorization: `Basic ${basic}` },
+      signal: AbortSignal.timeout(20000),
+    });
+    const bodyText = await res.text();
+    console.log("[link-preview] urlmeta", res.status, bodyText.slice(0, 300));
+    if (!res.ok) {
+      return c.json({ error: `urlmeta ${res.status}`, upstreamBody: bodyText.slice(0, 500) }, 502);
+    }
+    let data: {
+      result?: { status?: string; reason?: string };
+      meta?: { title?: string; description?: string; image?: string };
+    };
+    try {
+      data = JSON.parse(bodyText);
+    } catch {
+      return c.json({ error: "urlmeta: non-JSON response", upstreamBody: bodyText.slice(0, 500) }, 502);
+    }
+    if (data.result?.status !== "OK") {
+      return c.json({ error: `urlmeta: ${data.result?.reason ?? "non-OK"}`, upstream: data.result }, 502);
+    }
+    const m = data.meta ?? {};
+    return c.json({
+      title: m.title ?? null,
+      description: m.description ?? null,
+      image: m.image ?? null,
+    });
+  } catch (e) {
+    return c.json({ error: e instanceof Error ? e.message : "fetch failed" }, 502);
+  }
 });
 
 shortlinksAdmin.get("/links", (c) => {
@@ -29,6 +80,7 @@ shortlinksAdmin.get("/links", (c) => {
         like(schema.shortlinks.slug, likePattern(pq.q)),
         like(schema.shortlinks.target, likePattern(pq.q)),
         like(schema.shortlinks.title, likePattern(pq.q)),
+        like(schema.shortlinks.pageTitle, likePattern(pq.q)),
       )
     : undefined;
 
@@ -99,6 +151,9 @@ shortlinksAdmin.get("/links", (c) => {
       slug: l.slug,
       target: l.target,
       title: l.title,
+      pageTitle: l.pageTitle,
+      description: l.description,
+      image: l.image,
       expiresAt: l.expiresAt,
       createdAt: l.createdAt,
       views: totalByResource.get(l.id) ?? 0,
@@ -121,6 +176,9 @@ shortlinksAdmin.post("/links", async (c) => {
       slug,
       target: parsed.data.target,
       title: parsed.data.title || null,
+      pageTitle: parsed.data.pageTitle || null,
+      description: parsed.data.description || null,
+      image: parsed.data.image || null,
     })
     .run();
   return c.redirect("/admin/links");

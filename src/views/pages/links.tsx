@@ -21,6 +21,9 @@ export type LinkRow = {
   slug: string;
   target: string;
   title: string | null;
+  pageTitle: string | null;
+  description: string | null;
+  image: string | null;
   expiresAt: Date | null;
   createdAt: Date;
   views: number;
@@ -55,6 +58,7 @@ export const Links: FC<{
       <div class="share-list">
         <section class="create-bar">
           <form
+            id="create-link-form"
             method="post"
             action="/admin/links"
             class="grid gap-3 sm:grid-cols-[1.4fr_1fr_1fr_auto] items-end"
@@ -92,21 +96,33 @@ export const Links: FC<{
               <label class="label" for="title">
                 Title{" "}
                 <span class="font-normal text-(--color-text-soft)">
-                  (optional)
+                  (override)
                 </span>
               </label>
               <input
                 id="title"
                 type="text"
                 name="title"
-                placeholder="What is this?"
+                placeholder="Leave blank to use page title"
                 class="input"
               />
             </div>
+            <input type="hidden" id="pageTitle" name="pageTitle" value="" />
+            <input type="hidden" id="description" name="description" value="" />
+            <input type="hidden" id="image" name="image" value="" />
             <button type="submit" class="btn btn-primary">
               Create link
             </button>
           </form>
+          <div id="link-preview" class="link-preview" hidden>
+            <img id="link-preview-img" alt="" referrerpolicy="no-referrer" />
+            <div class="lp-body">
+              <div id="link-preview-title" class="lp-title" />
+              <div id="link-preview-desc" class="lp-desc" />
+              <div id="link-preview-host" class="lp-host" />
+            </div>
+          </div>
+          <LinkPreviewScript />
         </section>
 
         <div class="share-list-head">
@@ -123,11 +139,35 @@ export const Links: FC<{
           return (
             <div class={`share-row cols-7${expired ? " expired" : ""}`}>
               <KindBadge kind="shortlink" />
-              <a class="body-link" href={`/${r.slug}`} title={r.target}>
-                <span class="lbl">{r.title ?? r.target}</span>
-                <span class="slg">
-                  <span class="pfx">/</span>
-                  {r.slug}
+              <a
+                class={`body-link${r.image ? " has-thumb" : ""}`}
+                href={`/${r.slug}`}
+                title={r.description ?? r.target}
+              >
+                {r.image && (
+                  <img
+                    src={r.image}
+                    alt=""
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
+                    class="row-thumb"
+                  />
+                )}
+                <span class="body-text">
+                  <span class="lbl">{r.title ?? r.pageTitle ?? r.target}</span>
+                  {r.image && (r.description || (r.title && r.pageTitle)) && (
+                    <span class="sub">
+                      {r.title && r.pageTitle && <span class="sub-title">{r.pageTitle}</span>}
+                      {r.title && r.pageTitle && r.description && (
+                        <span class="sub-sep"> · </span>
+                      )}
+                      {r.description && <span class="sub-desc">{r.description}</span>}
+                    </span>
+                  )}
+                  <span class="slg">
+                    <span class="pfx">/</span>
+                    {r.slug}
+                  </span>
                 </span>
               </a>
               <span class="meta-col">{expired ? "expired" : ""}</span>
@@ -191,6 +231,75 @@ export const Links: FC<{
     </Layout>
   );
 };
+
+const LinkPreviewScript: FC = () => (
+  <script
+    dangerouslySetInnerHTML={{
+      __html: `
+        (function () {
+          console.log('[link-preview] script loaded');
+          const form = document.getElementById('create-link-form');
+          if (!form) { console.warn('[link-preview] no form'); return; }
+          const target = form.querySelector('#target');
+          const titleEl = form.querySelector('#title');
+          const pageTitleEl = form.querySelector('#pageTitle');
+          const descEl = form.querySelector('#description');
+          const imgEl = form.querySelector('#image');
+          const preview = document.getElementById('link-preview');
+          const pImg = document.getElementById('link-preview-img');
+          const pTitle = document.getElementById('link-preview-title');
+          const pDesc = document.getElementById('link-preview-desc');
+          const pHost = document.getElementById('link-preview-host');
+          function hostOf(u) { try { return new URL(u).host; } catch { return ''; } }
+          let lastFetched = '';
+          let inflight = null;
+          async function fetchPreview() {
+            const url = target.value.trim();
+            console.log('[link-preview] fetchPreview', url);
+            if (!url || url === lastFetched) return;
+            try { new URL(url); } catch { console.warn('[link-preview] invalid URL'); return; }
+            lastFetched = url;
+            if (inflight) inflight.abort();
+            inflight = new AbortController();
+            target.classList.add('loading');
+            try {
+              const res = await fetch('/admin/api/link-preview?url=' + encodeURIComponent(url), { signal: inflight.signal });
+              console.log('[link-preview] response', res.status);
+              if (!res.ok) {
+                const txt = await res.text();
+                console.error('[link-preview] error body', txt);
+                return;
+              }
+              const data = await res.json();
+              console.log('[link-preview] data', data);
+              if (data.title) {
+                pageTitleEl.value = data.title;
+                titleEl.placeholder = data.title;
+              }
+              if (data.description) descEl.value = data.description;
+              if (data.image) imgEl.value = data.image;
+              pTitle.textContent = data.title || '';
+              pDesc.textContent = data.description || '';
+              pHost.textContent = hostOf(url);
+              if (data.image) {
+                pImg.src = data.image;
+                pImg.hidden = false;
+              } else {
+                pImg.removeAttribute('src');
+                pImg.hidden = true;
+              }
+              preview.hidden = !(data.title || data.description || data.image);
+            } catch (e) { console.error('[link-preview] fetch threw', e); } finally {
+              target.classList.remove('loading');
+            }
+          }
+          target.addEventListener('blur', fetchPreview);
+          target.addEventListener('paste', () => setTimeout(fetchPreview, 50));
+        })();
+      `,
+    }}
+  />
+);
 
 function hostOf(url: string): string {
   try {
