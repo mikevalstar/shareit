@@ -1,4 +1,5 @@
 import type { FC } from "hono/jsx";
+import { Button, IconButton, Input, InputGroup, Label } from "../../components/ui";
 import { fullUrl, siteUrl } from "../../lib/config";
 import { formatSize } from "../../lib/format";
 import { Layout } from "../layout";
@@ -8,6 +9,7 @@ import {
   CopyIcon,
   CreateBar,
   EmptyState,
+  HeroIt,
   KindBadge,
   PageHero,
   type PageMetaView,
@@ -50,7 +52,7 @@ export const Files: FC<{
         eyebrow="Files"
         title={
           <>
-            Drop a file, <span class="it">share a link.</span>
+            Drop a file, <HeroIt>share a link.</HeroIt>
           </>
         }
         lede="Upload anything, or drag it anywhere on this page."
@@ -72,37 +74,32 @@ export const Files: FC<{
             class="grid items-end gap-3 sm:grid-cols-[1.4fr_1fr_auto]"
           >
             <div>
-              <label class="label" for="file">
-                File
-              </label>
-              <input
+              <Label for="file">File</Label>
+              <Input
                 id="file"
                 type="file"
                 name="file"
                 required
-                class="input file:mr-3 file:rounded file:border-0 file:bg-(--color-muted-bg) file:px-3 file:py-1.5 file:text-(--color-text)"
+                class="file:mr-3 file:rounded file:border-0 file:bg-(--color-muted-bg) file:px-3 file:py-1.5 file:text-(--color-text)"
               />
-              <span class="help">Tip: drop a file anywhere on this page to upload instantly.</span>
+              <span class="mt-1.5 block text-[13px] text-(--color-text-soft)">
+                Tip: drop a file anywhere on this page to upload instantly.
+              </span>
             </div>
             <div>
-              <label class="label" for="slug">
-                Slug
-              </label>
-              <div class="input-group">
-                <span class="prefix">{host}/f/</span>
-                <input
+              <Label for="slug">Slug</Label>
+              <InputGroup prefix={`${host}/f/`}>
+                <Input
                   id="slug"
                   type="text"
                   name="slug"
                   value={suggestedSlug}
                   pattern="[a-zA-Z0-9_\-]{1,40}"
-                  class="input font-mono"
+                  class="font-mono"
                 />
-              </div>
+              </InputGroup>
             </div>
-            <button type="submit" class="btn btn-primary">
-              Upload
-            </button>
+            <Button type="submit">Upload</Button>
           </form>
         </CreateBar>
 
@@ -131,27 +128,26 @@ export const Files: FC<{
               time={<RowTime date={r.createdAt} now={now} />}
               actions={
                 <>
-                  <button
+                  <IconButton
                     type="button"
-                    class="icon-btn copy-btn"
+                    class="copy-btn"
                     data-clipboard-text={url}
                     title="Copy full URL"
                     aria-label="Copy full URL"
                   >
                     <CopyIcon />
-                  </button>
-                  <a href={`/f/${r.slug}`} class="icon-btn" title="Open" aria-label="Open">
+                  </IconButton>
+                  <IconButton as="a" href={`/f/${r.slug}`} title="Open" aria-label="Open">
                     <ArrowUpRightIcon />
-                  </a>
+                  </IconButton>
                   <form method="post" action={`/admin/files/${r.id}/expire`}>
-                    <button
+                    <IconButton
                       type="submit"
-                      class="icon-btn"
                       title={expired ? "Unexpire" : "Expire"}
                       aria-label={expired ? "Unexpire" : "Expire"}
                     >
                       {expired ? <RotateIcon /> : <TrashIcon />}
-                    </button>
+                    </IconButton>
                   </form>
                 </>
               }
@@ -169,8 +165,11 @@ export const Files: FC<{
         <Pagination meta={meta} />
       </ShareList>
 
-      <div id="dropzone" class="dropzone">
-        <div class="dropzone-inner">
+      <div
+        id="dropzone"
+        class="pointer-events-none fixed inset-0 z-[1000] hidden bg-[color-mix(in_srgb,var(--color-primary)_75%,transparent)]"
+      >
+        <div class="rounded-3xl border-[3px] border-dashed border-white bg-[color-mix(in_srgb,var(--color-primary)_90%,black)] px-24 py-16 text-white shadow-[0_30px_80px_rgba(0,0,0,0.2)]">
           <span class="font-display text-5xl">Drop to upload</span>
         </div>
       </div>
@@ -184,10 +183,18 @@ export const Files: FC<{
             const input = document.getElementById('file');
             let depth = 0;
             const hasFiles = (e) => Array.from(e.dataTransfer?.types || []).includes('Files');
+            const show = () => {
+              dz.classList.remove('hidden');
+              dz.classList.add('flex','items-center','justify-center');
+            };
+            const hide = () => {
+              dz.classList.add('hidden');
+              dz.classList.remove('flex','items-center','justify-center');
+            };
             window.addEventListener('dragenter', (e) => {
               if (!hasFiles(e)) return;
               depth++;
-              dz.classList.add('active');
+              show();
             });
             window.addEventListener('dragover', (e) => {
               if (!hasFiles(e)) return;
@@ -195,13 +202,13 @@ export const Files: FC<{
             });
             window.addEventListener('dragleave', () => {
               depth = Math.max(0, depth - 1);
-              if (depth === 0) dz.classList.remove('active');
+              if (depth === 0) hide();
             });
             window.addEventListener('drop', (e) => {
               if (!hasFiles(e)) return;
               e.preventDefault();
               depth = 0;
-              dz.classList.remove('active');
+              hide();
               const f = e.dataTransfer.files?.[0];
               if (!f) return;
               const dt = new DataTransfer();

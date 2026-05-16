@@ -78,7 +78,7 @@ Single-user. Password lives in `ADMIN_PASSWORD_HASH` (argon2id). On login, a ses
 
 ### Styling
 
-Tailwind v4 with theme tokens defined in `@theme {}` inside `src/styles/app.css` (port of the valstar.dev color/font system: warm light bg, blue primary, DM Sans / DM Serif Display / DM Mono from Google Fonts). Reusable component classes (`.btn`, `.card`, `.input`, `.label`, `.pill`, `.data-table`, `.nav-link`, `.nav-cta`, `.section-label`, `.link`) are defined plainly in the same file — prefer these over rebuilding the styles inline with utilities, to keep pages consistent.
+Tailwind v4 only — `src/styles/app.css` contains nothing but `@import`, `@source`, `@view-transition`, and the `@theme {}` token block (warm light bg, blue primary, DM Sans / DM Serif Display / DM Mono). No `.btn`/`.card`/etc. component classes — reusable visual primitives live as JSX components in `src/components/ui.tsx` (`Button`, `LinkButton`, `IconButton`, `Card`, `Input`, `Textarea`, `Label`, `InputGroup`, `Pill`, `Kbd`, `BrandMark`). Each composes a Tailwind utility string; the same strings are also exported as the `cls` object for places that need raw class names (e.g. injected HTML in `<script>` blocks). Prefer these components when adding new UI to keep the look consistent. Theme colors are referenced via Tailwind v4 arbitrary-variable syntax (`bg-(--color-primary)`, `text-(--color-text-muted)`). The `copy-btn` class still appearing on action buttons is a clipboard.js JS hook, not styling.
 
 The Tailwind CLI watches `src/styles/app.css` → emits `public/app.css`, which the layout serves at `/static/app.css` via Hono's `serveStatic`.
 

@@ -1,4 +1,5 @@
 import type { FC } from "hono/jsx";
+import { IconButton, Kbd } from "../../components/ui";
 import { fullUrl } from "../../lib/config";
 import { Layout } from "../layout";
 import {
@@ -6,6 +7,7 @@ import {
   ClipboardScript,
   CopyIcon,
   EmptyState,
+  HeroIt,
   KindBadge,
   PageHero,
   type PageMetaView,
@@ -45,7 +47,7 @@ export const Snippets: FC<{
       eyebrow="Snippets"
       title={
         <>
-          Paste file <span class="it">share it</span>
+          Paste file <HeroIt>share it</HeroIt>
         </>
       }
       lede="Multi-file snippets with Shiki syntax highlighting"
@@ -88,27 +90,26 @@ export const Snippets: FC<{
             time={<RowTime date={r.createdAt} now={now} />}
             actions={
               <>
-                <button
+                <IconButton
                   type="button"
-                  class="icon-btn copy-btn"
+                  class="copy-btn"
                   data-clipboard-text={url}
                   title="Copy full URL"
                   aria-label="Copy full URL"
                 >
                   <CopyIcon />
-                </button>
-                <a href={`/s/${r.slug}`} class="icon-btn" title="Open" aria-label="Open">
+                </IconButton>
+                <IconButton as="a" href={`/s/${r.slug}`} title="Open" aria-label="Open">
                   <ArrowUpRightIcon />
-                </a>
+                </IconButton>
                 <form method="post" action={`/admin/snippets/${r.id}/expire`}>
-                  <button
+                  <IconButton
                     type="submit"
-                    class="icon-btn"
                     title={expired ? "Unexpire" : "Expire"}
                     aria-label={expired ? "Unexpire" : "Expire"}
                   >
                     {expired ? <RotateIcon /> : <TrashIcon />}
-                  </button>
+                  </IconButton>
                 </form>
               </>
             }
@@ -122,7 +123,7 @@ export const Snippets: FC<{
             "Try a different search term, or clear the filter."
           ) : (
             <>
-              Hit <span class="kbd">+ New snippet</span> to paste your first one.
+              Hit <Kbd>+ New snippet</Kbd> to paste your first one.
             </>
           )}
         </EmptyState>

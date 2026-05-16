@@ -1,4 +1,5 @@
 import type { FC } from "hono/jsx";
+import { Button, IconButton, Input, InputGroup, Label } from "../../components/ui";
 import { fullUrl, siteUrl } from "../../lib/config";
 import { Layout } from "../layout";
 import {
@@ -7,6 +8,7 @@ import {
   CopyIcon,
   CreateBar,
   EmptyState,
+  HeroIt,
   KindBadge,
   PageHero,
   type PageMetaView,
@@ -51,7 +53,7 @@ export const Links: FC<{
         eyebrow="Links"
         title={
           <>
-            Short <span class="it">links</span>
+            Short <HeroIt>links</HeroIt>
           </>
         }
       >
@@ -71,52 +73,43 @@ export const Links: FC<{
             class="grid items-end gap-3 sm:grid-cols-[1.4fr_1fr_1fr_auto]"
           >
             <div>
-              <label class="label" for="target">
-                Target URL
-              </label>
-              <input
+              <Label for="target">Target URL</Label>
+              <Input
                 id="target"
                 type="url"
                 name="target"
                 required
                 placeholder="https://example.com/very/long/path"
-                class="input"
               />
             </div>
             <div>
-              <label class="label" for="slug">
-                Slug
-              </label>
-              <div class="input-group">
-                <span class="prefix">{host}/</span>
-                <input
+              <Label for="slug">Slug</Label>
+              <InputGroup prefix={`${host}/`}>
+                <Input
                   id="slug"
                   type="text"
                   name="slug"
                   value={suggestedSlug}
                   pattern="[a-zA-Z0-9_\-]{1,40}"
-                  class="input font-mono"
+                  class="font-mono"
                 />
-              </div>
+              </InputGroup>
             </div>
             <div>
-              <label class="label" for="title">
+              <Label for="title">
                 Title <span class="font-normal text-(--color-text-soft)">(override)</span>
-              </label>
-              <input
+              </Label>
+              <Input
                 id="title"
                 type="text"
                 name="title"
                 placeholder="Leave blank to use page title"
-                class="input"
               />
             </div>
             <input type="hidden" id="pageTitle" name="pageTitle" value="" />
             <input type="hidden" id="description" name="description" value="" />
             <input type="hidden" id="image" name="image" value="" />
-            <button type="submit" class="btn btn-primary">
-              Create link
-            </button>
+            <Button type="submit">Create link</Button>
           </form>
           <div
             id="link-preview"
@@ -183,27 +176,26 @@ export const Links: FC<{
               time={<RowTime date={r.createdAt} now={now} />}
               actions={
                 <>
-                  <button
+                  <IconButton
                     type="button"
-                    class="icon-btn copy-btn"
+                    class="copy-btn"
                     data-clipboard-text={url}
                     title="Copy full URL"
                     aria-label="Copy full URL"
                   >
                     <CopyIcon />
-                  </button>
-                  <a href={`/${r.slug}`} class="icon-btn" title="Open" aria-label="Open">
+                  </IconButton>
+                  <IconButton as="a" href={`/${r.slug}`} title="Open" aria-label="Open">
                     <ArrowUpRightIcon />
-                  </a>
+                  </IconButton>
                   <form method="post" action={`/admin/links/${r.id}/expire`}>
-                    <button
+                    <IconButton
                       type="submit"
-                      class="icon-btn"
                       title={expired ? "Unexpire" : "Expire"}
                       aria-label={expired ? "Unexpire" : "Expire"}
                     >
                       {expired ? <RotateIcon /> : <TrashIcon />}
-                    </button>
+                    </IconButton>
                   </form>
                 </>
               }

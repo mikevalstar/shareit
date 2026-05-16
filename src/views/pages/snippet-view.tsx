@@ -1,9 +1,10 @@
 import type { FC } from "hono/jsx";
 import { codeToHtml } from "shiki";
+import { Card, IconButton, Pill, SR_ONLY } from "../../components/ui";
 import { fullUrl } from "../../lib/config";
 import { formatNumber } from "../../lib/format";
 import { Layout } from "../layout";
-import { ClipboardScript, CopyIcon, escapeHtml, PageHero } from "./_shared";
+import { ClipboardScript, CopyIcon, escapeHtml, HeroIt, PageHero } from "./_shared";
 
 const SHIKI_LANGS = new Set([
   "bash",
@@ -55,6 +56,11 @@ async function highlight(code: string, language: string | null): Promise<string>
   }
 }
 
+/* Shiki output is server-rendered HTML; we control its look via descendant
+   utilities on a wrapper rather than a custom class. */
+const SHIKI_WRAPPER =
+  "[&_pre.shiki]:m-0 [&_pre.shiki]:overflow-x-auto [&_pre.shiki]:px-5 [&_pre.shiki]:py-5 [&_pre.shiki]:font-mono [&_pre.shiki]:text-[13px] [&_pre.shiki]:leading-[1.65] [&_pre.shiki]:!bg-(--color-bg-card) [&_pre.shiki_code]:[font-family:inherit] [&_pre.shiki_.line]:inline-block [&_pre.shiki_.line]:w-full";
+
 export const SnippetView: FC<{
   title: string | null;
   description: string | null;
@@ -74,7 +80,7 @@ export const SnippetView: FC<{
             <>{title}</>
           ) : (
             <>
-              <span class="it">Untitled</span> snippet
+              <HeroIt>Untitled</HeroIt> snippet
             </>
           )
         }
@@ -95,27 +101,27 @@ export const SnippetView: FC<{
 
       <div class="mx-auto max-w-[1400px] space-y-6">
         {renderedFiles.map((f, i) => (
-          <section class="card overflow-hidden">
+          <Card class="overflow-hidden">
             <header class="flex items-center justify-between border-b border-(--color-border) bg-(--color-bg-sunken) px-4 py-2.5 text-sm">
               <div class="flex items-center gap-3">
                 <span class="font-mono text-(--color-text)">{f.filename}</span>
-                {f.language && <span class="pill pill-muted">{f.language}</span>}
+                {f.language && <Pill variant="muted">{f.language}</Pill>}
               </div>
-              <button
+              <IconButton
                 type="button"
-                class="copy-btn icon-btn"
+                class="copy-btn"
                 data-clipboard-target={`#snippet-raw-${i}`}
                 title="Copy file contents"
                 aria-label="Copy file contents"
               >
                 <CopyIcon />
-              </button>
+              </IconButton>
             </header>
-            <div class="snippet-body" dangerouslySetInnerHTML={{ __html: f.html }} />
-            <textarea id={`snippet-raw-${i}`} class="sr-only" readonly>
+            <div class={SHIKI_WRAPPER} dangerouslySetInnerHTML={{ __html: f.html }} />
+            <textarea id={`snippet-raw-${i}`} class={SR_ONLY} readonly>
               {f.raw}
             </textarea>
-          </section>
+          </Card>
         ))}
       </div>
 

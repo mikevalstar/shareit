@@ -1,4 +1,5 @@
 import type { FC } from "hono/jsx";
+import { IconButton } from "../../components/ui";
 import { fullUrl } from "../../lib/config";
 import { formatNumber } from "../../lib/format";
 import { Layout } from "../layout";
@@ -8,6 +9,7 @@ import {
   CopyIcon,
   EmptyState,
   FilterRow,
+  HeroIt,
   KindBadge,
   PageHero,
   type PageMetaView,
@@ -33,6 +35,11 @@ type AdminListItem = {
   spark: number[];
 };
 
+const SIDE_CELL = "border-r border-white/20 px-4 py-3.5 last:border-r-0";
+const SIDE_LABEL = "font-mono text-[0.65rem] uppercase tracking-[0.14em] opacity-75";
+const SIDE_VALUE =
+  "mt-1 font-display text-[1.85rem] leading-none [font-variant-numeric:tabular-nums_lining-nums]";
+
 export const Dashboard: FC<{
   items: AdminListItem[];
   stats: { links: number; files: number; snippets: number; events: number };
@@ -48,7 +55,7 @@ export const Dashboard: FC<{
         eyebrow={`Dashboard`}
         title={
           <>
-            Your <span class="it">shares</span>
+            Your <HeroIt>shares</HeroIt>
           </>
         }
         lede={<>{formatNumber(stats.events)} clicks, downloads and reads.</>}
@@ -66,30 +73,32 @@ export const Dashboard: FC<{
           </>
         }
         side={
-          <div class="panel-side">
-            <div class="panel-side-row">
-              <div class="panel-side-cell">
-                <div class="l">Links</div>
-                <div class="v">{stats.links}</div>
+          <div class="grid auto-rows-auto gap-6">
+            <div class="grid grid-cols-[repeat(auto-fit,minmax(0,1fr))] overflow-hidden rounded-[0.85rem] border border-white/20 bg-white/5">
+              <div class={SIDE_CELL}>
+                <div class={SIDE_LABEL}>Links</div>
+                <div class={SIDE_VALUE}>{stats.links}</div>
               </div>
-              <div class="panel-side-cell">
-                <div class="l">Files</div>
-                <div class="v">{stats.files}</div>
+              <div class={SIDE_CELL}>
+                <div class={SIDE_LABEL}>Files</div>
+                <div class={SIDE_VALUE}>{stats.files}</div>
               </div>
-              <div class="panel-side-cell">
-                <div class="l">Snippets</div>
-                <div class="v">{stats.snippets}</div>
+              <div class={SIDE_CELL}>
+                <div class={SIDE_LABEL}>Snippets</div>
+                <div class={SIDE_VALUE}>{stats.snippets}</div>
               </div>
             </div>
             <div>
-              <div class="panel-trend">
-                <span class="big">{formatNumber(trend.thisWeek)}</span>
-                <span class="meta">
+              <div class="flex flex-wrap items-baseline gap-3.5">
+                <span class="font-display text-[3.25rem] leading-none [font-variant-numeric:tabular-nums_lining-nums]">
+                  {formatNumber(trend.thisWeek)}
+                </span>
+                <span class="font-mono text-[0.78rem] opacity-85">
                   views, last 7 days
                   {delta !== 0 && (
                     <>
                       {" "}
-                      <span class={delta > 0 ? "up" : "dn"}>
+                      <span class={delta > 0 ? "text-[hsl(150_75%_80%)]" : "text-[hsl(0_90%_80%)]"}>
                         {delta > 0 ? "▲" : "▼"} {Math.abs(delta)}%
                       </span>
                     </>
@@ -132,23 +141,23 @@ export const Dashboard: FC<{
               time={<RowTime date={it.createdAt} now={now} />}
               actions={
                 <>
-                  <button
+                  <IconButton
                     type="button"
-                    class="icon-btn copy-btn"
+                    class="copy-btn"
                     data-clipboard-text={url}
                     title="Copy full URL"
                     aria-label="Copy full URL"
                   >
                     <CopyIcon />
-                  </button>
-                  <a
+                  </IconButton>
+                  <IconButton
+                    as="a"
                     href={publicUrl(it.kind, it.slug)}
-                    class="icon-btn"
                     title="Open"
                     aria-label="Open"
                   >
                     <ArrowUpRightIcon />
-                  </a>
+                  </IconButton>
                 </>
               }
             />

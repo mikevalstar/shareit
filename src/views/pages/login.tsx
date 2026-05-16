@@ -1,6 +1,7 @@
 import type { FC } from "hono/jsx";
+import { Button, Card, Input, Label } from "../../components/ui";
 import { Layout } from "../layout";
-import { PageHero } from "./_shared";
+import { HeroIt, PageHero } from "./_shared";
 
 export const Login: FC<{ error?: string }> = ({ error }) => (
   <Layout title="Login">
@@ -9,36 +10,35 @@ export const Login: FC<{ error?: string }> = ({ error }) => (
       eyebrow="Admin access"
       title={
         <>
-          Welcome <span class="it">back.</span>
+          Welcome <HeroIt>back.</HeroIt>
         </>
       }
       lede="Enter your password to manage your shares."
     />
 
     <div class="mx-auto max-w-md">
-      <form method="post" action="/login" class="card space-y-5 p-7">
-        <div>
-          <label class="label" for="password">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            name="password"
-            placeholder="••••••••"
-            autofocus
-            required
-            class="input"
-          />
-        </div>
-        {error && (
-          <p class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
-          </p>
-        )}
-        <button type="submit" class="btn btn-primary w-full">
-          Sign in
-        </button>
+      <form method="post" action="/login">
+        <Card class="space-y-5 p-7">
+          <div>
+            <Label for="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              name="password"
+              placeholder="••••••••"
+              autofocus
+              required
+            />
+          </div>
+          {error && (
+            <p class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {error}
+            </p>
+          )}
+          <Button type="submit" full>
+            Sign in
+          </Button>
+        </Card>
       </form>
 
       <p class="mt-6 text-center text-xs text-(--color-text-soft)">

@@ -14,14 +14,18 @@ import {
   TrendingUp as LTrendingUp,
   X as LX,
 } from "lucide-static";
+import { Button, Card, cls, Input, LinkButton } from "../../components/ui";
 import { formatNumber, timeAgo } from "../../lib/format";
 import { Layout, type NavKey } from "../layout";
 
 /* ------------------------------------------------------------------ */
-/*  PageHero — the drenched blue panel that opens every primary page. */
-/*  Composes: eyebrow, h1 with italic accent, lede, optional CTAs,    */
-/*  optional right-side stats panel.                                  */
+/*  PageHero — drenched blue panel that opens every primary page.     */
 /* ------------------------------------------------------------------ */
+
+const PANEL_BLEED = "relative -mt-10 mb-11 mx-[calc(50%-50vw)]";
+
+const PANEL_BASE =
+  "relative overflow-hidden bg-(--color-primary) text-white px-6 after:pointer-events-none after:absolute after:inset-0 after:content-[''] after:bg-[radial-gradient(900px_600px_at_85%_0%,hsl(215_90%_65%/0.55),transparent_60%),radial-gradient(700px_500px_at_0%_110%,hsl(250_70%_45%/0.45),transparent_55%)]";
 
 export const PageHero: FC<
   PropsWithChildren<{
@@ -33,14 +37,30 @@ export const PageHero: FC<
     size?: "default" | "sm";
   }>
 > = ({ eyebrow, title, lede, side, cta, size, children }) => (
-  <div class="panel-bleed">
-    <div class={`panel${size === "sm" ? " panel-sm" : ""}`}>
-      <div class={`panel-inner${side ? " panel-split" : ""}`}>
+  <div class={PANEL_BLEED}>
+    <div class={`${PANEL_BASE} ${size === "sm" ? "pt-24 pb-10" : "pt-26 pb-13"}`}>
+      <div
+        class={`relative mx-auto grid max-w-[1400px] gap-10 px-6 ${side ? "md:grid-cols-[1.4fr_1fr] md:items-end md:gap-16" : "grid-cols-1"}`}
+      >
         <div>
-          <div class="panel-eye">{eyebrow}</div>
-          <h1 class={`panel-h${size === "sm" ? " panel-h-sm" : ""}`}>{title}</h1>
-          {lede && <p class="panel-lede">{lede}</p>}
-          {cta && <div class="panel-cta">{cta}</div>}
+          <div class="mb-4 inline-flex items-center gap-3 font-mono text-xs uppercase tracking-[0.2em] opacity-80 before:h-px before:w-6 before:bg-white/60 before:content-['']">
+            {eyebrow}
+          </div>
+          <h1
+            class={`m-0 font-display tracking-tight ${size === "sm" ? "text-[clamp(2.25rem,5vw,3.5rem)] leading-[0.95]" : "text-[clamp(2.75rem,7vw,5rem)] leading-[0.95]"}`}
+          >
+            {title}
+          </h1>
+          {lede && (
+            <p class="mt-4 max-w-[36ch] font-display text-[1.15rem] italic leading-snug opacity-85">
+              {lede}
+            </p>
+          )}
+          {cta && (
+            <div class="mt-7 inline-flex flex-wrap gap-2 [&_a]:inline-flex [&_a]:items-center [&_a]:gap-1.5 [&_a]:rounded-full [&_a]:bg-white [&_a]:px-4 [&_a]:py-2 [&_a]:text-sm [&_a]:font-medium [&_a]:text-(--color-primary) [&_a:hover]:bg-[hsl(40_90%_78%)] [&_a:hover]:text-(--color-text) [&_a.ghost]:bg-transparent [&_a.ghost]:text-white [&_a.ghost]:border [&_a.ghost]:border-white/50 [&_a.ghost:hover]:bg-white/10 [&_a.ghost:hover]:text-white [&_button]:inline-flex [&_button]:items-center [&_button]:gap-1.5 [&_button]:rounded-full [&_button]:bg-white [&_button]:px-4 [&_button]:py-2 [&_button]:text-sm [&_button]:font-medium [&_button]:text-(--color-primary) [&_button]:cursor-pointer [&_button:hover]:bg-[hsl(40_90%_78%)] [&_button:hover]:text-(--color-text)">
+              {cta}
+            </div>
+          )}
           {children}
         </div>
         {side}
@@ -49,22 +69,31 @@ export const PageHero: FC<
   </div>
 );
 
-/* Bars chart for the side of the panel (30-day or 7-day series). */
+/* Italic accent inside a panel heading (replaces .it). */
+export const HeroIt: FC<PropsWithChildren> = ({ children }) => (
+  <span class="italic text-[hsl(40_90%_78%)]">{children}</span>
+);
+
+/* Bars chart on the side of the panel. */
 export const PanelBars: FC<{ values: number[] }> = ({ values }) => {
   const max = Math.max(...values, 1);
   return (
-    <div class="panel-bars">
+    <div class="mt-3 flex h-14 items-end gap-[3px]">
       {values.map((v, i) => {
         const h = Math.max(2, Math.round((v / max) * 54));
+        const isToday = i === values.length - 1;
         return (
-          <span class={`b${i === values.length - 1 ? " today" : ""}`} style={`height:${h}px`} />
+          <span
+            class={`min-h-[2px] flex-1 rounded-[2px] ${isToday ? "bg-[hsl(40_90%_78%)]" : "bg-white/85"}`}
+            style={`height:${h}px`}
+          />
         );
       })}
     </div>
   );
 };
 
-/* The square kind badge used in every row across the app. */
+/* Square kind badge used in every list row. */
 const KIND_BG: Record<string, string> = {
   file: "bg-(--color-accent-amber)",
   snippet: "bg-(--color-secondary)",
@@ -83,8 +112,7 @@ export const KindBadge: FC<{ kind: string; size?: number }> = ({ kind, size = 14
 };
 
 /* ------------------------------------------------------------------ */
-/*  Share list — the canonical row layout for items below the panel.  */
-/*  Used on Dashboard, Links, Files, Snippets.                        */
+/*  Share list — canonical row layout below the panel.                 */
 /* ------------------------------------------------------------------ */
 
 export const ShareList: FC<PropsWithChildren> = ({ children }) => (
@@ -119,8 +147,6 @@ export const EmptyState: FC<{ title: string; children: any }> = ({ title, childr
   </div>
 );
 
-/* Row layout. Mobile collapses to 2 cols (badge | stack); md+ uses
-   a fixed 6- or 7-col grid depending on whether a `meta` cell is given. */
 type ShareRowProps = {
   badge: any;
   body: any;
@@ -172,7 +198,6 @@ export const ShareRow: FC<ShareRowProps> = ({
   );
 };
 
-/* Body cell — label + optional sub + slug. Optional left-side thumb. */
 export const RowBody: FC<{
   href: string;
   title?: string;
@@ -215,7 +240,6 @@ export const RowBody: FC<{
   </a>
 );
 
-/* Views cell content — big number + small "views" caption underneath. */
 export const RowViews: FC<{ count: number }> = ({ count }) => (
   <>
     {formatNumber(count)}
@@ -225,8 +249,11 @@ export const RowViews: FC<{ count: number }> = ({ count }) => (
   </>
 );
 
-/* Time-ago cell content. */
 export const RowTime: FC<{ date: Date; now: Date }> = ({ date, now }) => <>{timeAgo(date, now)}</>;
+
+/* ------------------------------------------------------------------ */
+/*  FormPage — wraps a simple form view in the hero + a centered card. */
+/* ------------------------------------------------------------------ */
 
 export const FormPage: FC<{
   title: string;
@@ -239,7 +266,7 @@ export const FormPage: FC<{
   <Layout title={title} authed active={active}>
     <PageHero size="sm" eyebrow={eyebrow ?? "Create"} title={title} lede={lede} />
     <div class={wide ? "mx-auto max-w-3xl" : "mx-auto max-w-xl"}>
-      <div class="card p-7">{children}</div>
+      <Card class="p-7">{children}</Card>
     </div>
   </Layout>
 );
@@ -252,24 +279,21 @@ export const Field: FC<{
   placeholder?: string;
 }> = ({ label, name, type, required, placeholder }) => (
   <div>
-    <label class="label" for={name}>
+    <label class={cls.label} for={name}>
       {label}
     </label>
-    <input
+    <Input
       id={name}
       type={type ?? "text"}
       name={name}
       required={required}
       placeholder={placeholder}
-      class="input"
     />
   </div>
 );
 
 export const Submit: FC<{ children?: string }> = ({ children }) => (
-  <button type="submit" class="btn btn-primary">
-    {children ?? "Create"}
-  </button>
+  <Button type="submit">{children ?? "Create"}</Button>
 );
 
 export function publicUrl(kind: string, slug: string) {
@@ -278,15 +302,23 @@ export function publicUrl(kind: string, slug: string) {
   return `/s/${slug}`;
 }
 
+/* ------------------------------------------------------------------ */
+/*  Sparkline — uses the Datatype font ligatures for bars/dots/pies.   */
+/* ------------------------------------------------------------------ */
+
+const CHART =
+  "font-['Datatype',monospace] font-normal text-2xl leading-none text-(--color-primary) [letter-spacing:0] [font-variant-ligatures:contextual_discretionary-ligatures] [font-feature-settings:'calt'_on,'liga'_on,'dlig'_on] whitespace-nowrap";
+
 export const Sparkline: FC<{ values: number[] }> = ({ values }) => {
   const max = Math.max(...values, 1);
   const norm = values.map((v) => Math.max(Math.round((v / max) * 100), 5));
-  return <span class="chart">{`{b:${norm.join(",")}}`}</span>;
+  return <span class={CHART}>{`{b:${norm.join(",")}}`}</span>;
 };
 
-// Lucide SVG strings, sized via inline width/height swap. lucide-react would
-// require React's runtime; lucide-static is plain SVG strings that work fine
-// under hono/jsx via dangerouslySetInnerHTML.
+/* ------------------------------------------------------------------ */
+/*  Icons — lucide SVG strings sized inline.                           */
+/* ------------------------------------------------------------------ */
+
 function sizedSvg(svg: string, size: number): string {
   return svg.replace(/width="24"/, `width="${size}"`).replace(/height="24"/, `height="${size}"`);
 }
@@ -294,10 +326,10 @@ function sizedSvg(svg: string, size: number): string {
 export const Icon: FC<{ svg: string; size?: number; class?: string }> = ({
   svg,
   size = 16,
-  class: cls,
+  class: cls2,
 }) => (
   <span
-    class={`icon ${cls ?? ""}`}
+    class={`inline-flex items-center justify-center align-[-2px] leading-none text-current [&_svg]:block ${cls2 ?? ""}`}
     aria-hidden="true"
     dangerouslySetInnerHTML={{ __html: sizedSvg(svg, size) }}
   />
@@ -323,6 +355,10 @@ export const TrendingDownIcon: FC<{ size?: number }> = ({ size }) => (
   <Icon svg={LTrendingDown} size={size} />
 );
 
+/* ------------------------------------------------------------------ */
+/*  Clipboard helper — wires up .copy-btn buttons across the app.      */
+/* ------------------------------------------------------------------ */
+
 export const ClipboardScript: FC = () => (
   <>
     <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js" />
@@ -332,8 +368,8 @@ export const ClipboardScript: FC = () => (
           const c = new ClipboardJS('.copy-btn');
           c.on('success', (e) => {
             const b = e.trigger;
-            b.classList.add('copied');
-            setTimeout(() => { b.classList.remove('copied'); }, 1200);
+            b.classList.add('text-(--color-success)','border-(--color-success)');
+            setTimeout(() => { b.classList.remove('text-(--color-success)','border-(--color-success)'); }, 1200);
             e.clearSelection();
           });
         `,
@@ -341,6 +377,10 @@ export const ClipboardScript: FC = () => (
     />
   </>
 );
+
+/* ------------------------------------------------------------------ */
+/*  Pagination                                                         */
+/* ------------------------------------------------------------------ */
 
 export type PageMetaView = {
   page: number;
@@ -365,7 +405,11 @@ export const PanelSearch: FC<{ basePath: string; q: string; placeholder?: string
   q,
   placeholder,
 }) => (
-  <form method="get" action={basePath} class="panel-search">
+  <form
+    method="get"
+    action={basePath}
+    class="mt-6 flex max-w-[26rem] items-center gap-2 rounded-full bg-white/95 py-1.5 pl-4 pr-1.5"
+  >
     <SearchIcon size={16} />
     <input
       type="search"
@@ -373,13 +417,19 @@ export const PanelSearch: FC<{ basePath: string; q: string; placeholder?: string
       value={q}
       placeholder={placeholder ?? "Search…"}
       autocomplete="off"
+      class="flex-1 border-0 bg-transparent font-sans text-sm text-(--color-text) outline-none placeholder:text-(--color-text-soft)"
     />
     {q && (
-      <a href={basePath} class="clear" title="Clear">
+      <a href={basePath} class="px-2 text-sm text-(--color-text-muted)" title="Clear">
         <XIcon size={14} />
       </a>
     )}
-    <button type="submit">Filter</button>
+    <button
+      type="submit"
+      class="cursor-pointer rounded-full border-0 bg-(--color-primary) px-4 py-1.5 text-sm font-medium text-white"
+    >
+      Filter
+    </button>
   </form>
 );
 
@@ -390,22 +440,22 @@ export const FilterRow: FC<{
   total: number;
   noun: string;
 }> = ({ basePath, q, placeholder, total, noun }) => (
-  <form method="get" action={basePath} class="filter-row">
-    <input
+  <form method="get" action={basePath} class="mb-2 flex flex-wrap items-center gap-3 px-1 py-3">
+    <Input
       type="search"
       name="q"
       value={q}
       placeholder={placeholder ?? "Search…"}
-      class="input filter-input"
+      class="w-[min(22rem,100%)]"
       autocomplete="off"
     />
-    <button type="submit" class="btn btn-sm">
+    <Button type="submit" size="sm">
       Filter
-    </button>
+    </Button>
     {q && (
-      <a href={basePath} class="btn btn-sm btn-ghost">
+      <LinkButton href={basePath} variant="ghost" size="sm">
         Clear
-      </a>
+      </LinkButton>
     )}
     <span class="ml-auto text-sm text-(--color-text-soft)">
       {total} {total === 1 ? noun : `${noun}s`}
@@ -414,6 +464,13 @@ export const FilterRow: FC<{
   </form>
 );
 
+const PAGE_LINK =
+  "inline-flex min-w-8 items-center justify-center rounded-md border border-(--color-border) bg-(--color-bg-card) px-2.5 py-1.5 text-(--color-text) no-underline tabular-nums transition-colors";
+const PAGE_LINK_HOVER = "hover:bg-(--color-bg-sunken)";
+const PAGE_LINK_ACTIVE = "bg-(--color-primary) border-(--color-primary) text-white";
+const PAGE_LINK_DISABLED =
+  "inline-flex min-w-8 items-center justify-center rounded-md border border-transparent bg-transparent px-2.5 py-1.5 text-(--color-text-soft) tabular-nums cursor-default";
+
 export const Pagination: FC<{ meta: PageMetaView }> = ({ meta }) => {
   if (meta.totalPages <= 1) return null;
   const { page, totalPages, basePath, q, total, pageSize } = meta;
@@ -421,15 +478,18 @@ export const Pagination: FC<{ meta: PageMetaView }> = ({ meta }) => {
   const end = Math.min(page * pageSize, total);
   const window = pageWindow(page, totalPages);
   return (
-    <nav class="pagination" aria-label="Pagination">
-      <span class="pagination-range">
+    <nav
+      class="flex flex-wrap items-center justify-between gap-3 border-t border-(--color-border) bg-[color-mix(in_srgb,var(--color-bg-sunken)_40%,transparent)] px-4 py-3.5 text-sm"
+      aria-label="Pagination"
+    >
+      <span class="tabular-nums text-(--color-text-muted)">
         {start}–{end} of {total}
       </span>
-      <div class="pagination-pages">
+      <div class="inline-flex items-center gap-1">
         <PageLink basePath={basePath} page={page - 1} q={q} disabled={page <= 1} label="‹ Prev" />
         {window.map((p) =>
           p === "…" ? (
-            <span class="pagination-gap">…</span>
+            <span class="px-1 text-(--color-text-soft)">…</span>
           ) : (
             <PageLink basePath={basePath} page={p} q={q} active={p === page} label={String(p)} />
           ),
@@ -454,11 +514,11 @@ const PageLink: FC<{
   disabled?: boolean;
   label: string;
 }> = ({ basePath, page, q, active, disabled, label }) => {
-  if (disabled) return <span class="pagination-link disabled">{label}</span>;
+  if (disabled) return <span class={PAGE_LINK_DISABLED}>{label}</span>;
   return (
     <a
       href={pageHref(basePath, page, q)}
-      class={`pagination-link${active ? " active" : ""}`}
+      class={`${PAGE_LINK} ${active ? PAGE_LINK_ACTIVE : PAGE_LINK_HOVER}`}
       aria-current={active ? "page" : undefined}
     >
       {label}
