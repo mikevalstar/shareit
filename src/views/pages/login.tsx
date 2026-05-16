@@ -1,23 +1,22 @@
 import type { FC } from "hono/jsx";
 import { Layout } from "../layout";
+import { PageHero } from "./_shared";
 
 export const Login: FC<{ error?: string }> = ({ error }) => (
   <Layout title="Login">
-    <div class="mx-auto mt-16 max-w-md">
-      <div class="flex flex-col items-center text-center">
-        <span
-          class="brand-mark mb-4"
-          style="width: 3rem; height: 3rem; border-radius: 0.85rem; font-size: 1.4rem;"
-          aria-hidden="true"
-        >
-          /
-        </span>
-        <span class="section-label">Admin access</span>
-        <h1 class="font-display text-4xl">Welcome back</h1>
-        <p class="mt-2 text-(--color-text-muted)">Enter your password to manage your shares.</p>
-      </div>
+    <PageHero
+      size="sm"
+      eyebrow="Admin access"
+      title={
+        <>
+          Welcome <span class="it">back.</span>
+        </>
+      }
+      lede="Enter your password to manage your shares."
+    />
 
-      <form method="post" action="/login" class="card mt-8 space-y-5 p-7">
+    <div class="mx-auto max-w-md">
+      <form method="post" action="/login" class="card space-y-5 p-7">
         <div>
           <label class="label" for="password">
             Password

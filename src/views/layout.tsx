@@ -21,12 +21,12 @@ export const Layout: FC<
     <body class={authed ? "pt-16" : ""}>
       {authed && (
         <div id="top-nav-wrapper" class="nav-wrapper">
-          <header class="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-4">
+          <header class="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4">
             <a href="/admin" class="brand text-(--color-text) hover:text-(--color-primary)">
               <span class="brand-mark" aria-hidden="true">
                 /
               </span>
-              <span class="font-display text-2xl leading-none">shareit</span>
+              <span class="font-display text-2xl leading-none">ShareIt</span>
             </a>
             <nav class="flex items-center gap-7">
               <a class={navCls("dashboard", active)} href="/admin">
@@ -50,7 +50,7 @@ export const Layout: FC<
           </header>
         </div>
       )}
-      <main class="mx-auto max-w-[1100px] px-6 py-10">{children}</main>
+      <main class="mx-auto max-w-[1400px] px-6 py-10">{children}</main>
       {authed && (
         <footer class="site-footer">
           <span>

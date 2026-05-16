@@ -3,7 +3,7 @@ import { codeToHtml } from "shiki";
 import { fullUrl } from "../../lib/config";
 import { formatNumber } from "../../lib/format";
 import { Layout } from "../layout";
-import { ClipboardScript, CopyIcon, escapeHtml } from "./_shared";
+import { ClipboardScript, CopyIcon, escapeHtml, PageHero } from "./_shared";
 
 const SHIKI_LANGS = new Set([
   "bash",
@@ -66,26 +66,34 @@ export const SnippetView: FC<{
   const url = fullUrl("snippet", slug);
   return (
     <Layout title={title ?? "Snippet"} authed={authed} active="snippets">
-      <header class="mb-8">
-        <span class="section-label">Snippet</span>
-        <h1 class="font-display text-4xl">{title ?? "Untitled snippet"}</h1>
-        {description && (
-          <p class="mt-3 whitespace-pre-wrap text-(--color-text-muted)">{description}</p>
-        )}
-        <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-(--color-text-muted)">
-          <code class="font-mono text-(--color-code-inline-text)">{url}</code>
-          <span class="rule-dot" aria-hidden="true" />
-          <span>
+      <PageHero
+        size="sm"
+        eyebrow={`Snippet · /s/${slug}`}
+        title={
+          title ? (
+            <>{title}</>
+          ) : (
+            <>
+              <span class="it">Untitled</span> snippet
+            </>
+          )
+        }
+        lede={description ?? undefined}
+      >
+        <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+          <code class="font-mono opacity-90">{url}</code>
+          <span class="opacity-50">·</span>
+          <span class="opacity-90">
             {formatNumber(views)} view{views === 1 ? "" : "s"}
           </span>
-          <span class="rule-dot" aria-hidden="true" />
-          <span>
+          <span class="opacity-50">·</span>
+          <span class="opacity-90">
             {renderedFiles.length} file{renderedFiles.length === 1 ? "" : "s"}
           </span>
         </div>
-      </header>
+      </PageHero>
 
-      <div class="space-y-6">
+      <div class="mx-auto max-w-[1400px] space-y-6">
         {renderedFiles.map((f, i) => (
           <section class="card overflow-hidden">
             <header class="flex items-center justify-between border-b border-(--color-border) bg-(--color-bg-sunken) px-4 py-2.5 text-sm">

@@ -1,5 +1,6 @@
-import type { FC } from "hono/jsx";
+import type { FC, PropsWithChildren } from "hono/jsx";
 import {
+  ArrowUpRight as LArrowUpRight,
   Check as LCheck,
   Code as LCode,
   Copy as LCopy,
@@ -7,23 +8,84 @@ import {
   Link as LLink,
   Plus as LPlus,
   RotateCcw as LRotate,
+  Search as LSearch,
   Trash2 as LTrash,
   TrendingDown as LTrendingDown,
   TrendingUp as LTrendingUp,
+  X as LX,
 } from "lucide-static";
 import { Layout, type NavKey } from "../layout";
 
-export const FormPage: FC<{ title: string; active: NavKey; wide?: boolean; children: any }> = ({
-  title,
-  active,
-  wide,
-  children,
-}) => (
+/* ------------------------------------------------------------------ */
+/*  PageHero — the drenched blue panel that opens every primary page. */
+/*  Composes: eyebrow, h1 with italic accent, lede, optional CTAs,    */
+/*  optional right-side stats panel.                                  */
+/* ------------------------------------------------------------------ */
+
+export const PageHero: FC<
+  PropsWithChildren<{
+    eyebrow: string;
+    title: any;
+    lede?: any;
+    side?: any;
+    cta?: any;
+    size?: "default" | "sm";
+  }>
+> = ({ eyebrow, title, lede, side, cta, size, children }) => (
+  <div class="panel-bleed">
+    <div class={`panel${size === "sm" ? " panel-sm" : ""}`}>
+      <div class={`panel-inner${side ? " panel-split" : ""}`}>
+        <div>
+          <div class="panel-eye">{eyebrow}</div>
+          <h1 class={`panel-h${size === "sm" ? " panel-h-sm" : ""}`}>{title}</h1>
+          {lede && <p class="panel-lede">{lede}</p>}
+          {cta && <div class="panel-cta">{cta}</div>}
+          {children}
+        </div>
+        {side}
+      </div>
+    </div>
+  </div>
+);
+
+/* Bars chart for the side of the panel (30-day or 7-day series). */
+export const PanelBars: FC<{ values: number[] }> = ({ values }) => {
+  const max = Math.max(...values, 1);
+  return (
+    <div class="panel-bars">
+      {values.map((v, i) => {
+        const h = Math.max(2, Math.round((v / max) * 54));
+        return (
+          <span class={`b${i === values.length - 1 ? " today" : ""}`} style={`height:${h}px`} />
+        );
+      })}
+    </div>
+  );
+};
+
+/* The square kind badge used in every row across the app. */
+export const KindBadge: FC<{ kind: string; size?: number }> = ({ kind, size = 14 }) => {
+  const svg = kind === "file" ? LFile : kind === "snippet" ? LCode : LLink;
+  const cls = kind === "file" ? "kf" : kind === "snippet" ? "ks" : "kl";
+  return (
+    <span class={`kg ${cls}`} aria-hidden="true">
+      <Icon svg={svg} size={size} />
+    </span>
+  );
+};
+
+export const FormPage: FC<{
+  title: string;
+  active: NavKey;
+  eyebrow?: string;
+  lede?: string;
+  wide?: boolean;
+  children: any;
+}> = ({ title, active, eyebrow, lede, wide, children }) => (
   <Layout title={title} authed active={active}>
+    <PageHero size="sm" eyebrow={eyebrow ?? "Create"} title={title} lede={lede} />
     <div class={wide ? "mx-auto max-w-3xl" : "mx-auto max-w-xl"}>
-      <span class="section-label">Create</span>
-      <h1 class="font-display text-4xl">{title}</h1>
-      <div class="card mt-6 p-7">{children}</div>
+      <div class="card p-7">{children}</div>
     </div>
   </Layout>
 );
@@ -95,6 +157,11 @@ export const PlusIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LPlus} s
 export const TrashIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LTrash} size={size} />;
 export const RotateIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LRotate} size={size} />;
 export const CheckIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LCheck} size={size} />;
+export const SearchIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LSearch} size={size} />;
+export const XIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LX} size={size} />;
+export const ArrowUpRightIcon: FC<{ size?: number }> = ({ size }) => (
+  <Icon svg={LArrowUpRight} size={size} />
+);
 export const TrendingUpIcon: FC<{ size?: number }> = ({ size }) => (
   <Icon svg={LTrendingUp} size={size} />
 );
@@ -138,6 +205,30 @@ function pageHref(basePath: string, page: number, q: string): string {
   return qs ? `${basePath}?${qs}` : basePath;
 }
 
+/* Pill-shaped search embedded directly in the panel. */
+export const PanelSearch: FC<{ basePath: string; q: string; placeholder?: string }> = ({
+  basePath,
+  q,
+  placeholder,
+}) => (
+  <form method="get" action={basePath} class="panel-search">
+    <SearchIcon size={16} />
+    <input
+      type="search"
+      name="q"
+      value={q}
+      placeholder={placeholder ?? "Search…"}
+      autocomplete="off"
+    />
+    {q && (
+      <a href={basePath} class="clear" title="Clear">
+        <XIcon size={14} />
+      </a>
+    )}
+    <button type="submit">Filter</button>
+  </form>
+);
+
 export const FilterRow: FC<{
   basePath: string;
   q: string;
@@ -145,11 +236,7 @@ export const FilterRow: FC<{
   total: number;
   noun: string;
 }> = ({ basePath, q, placeholder, total, noun }) => (
-  <form
-    method="get"
-    action={basePath}
-    class="filter-row flex flex-wrap items-center gap-3 border-b border-(--color-border-soft) px-5 py-3"
-  >
+  <form method="get" action={basePath} class="filter-row">
     <input
       type="search"
       name="q"

@@ -25,7 +25,13 @@ const SnippetFileInput: FC<{ index: number }> = ({ index }) => (
 );
 
 export const NewSnippet: FC = () => (
-  <FormPage title="New snippet" active="snippets" wide>
+  <FormPage
+    title="New snippet"
+    active="snippets"
+    eyebrow="Create · Snippets"
+    lede="Multi-file paste with Shiki highlighting. Optional title, description, and slug."
+    wide
+  >
     <form method="post" action="/admin/new/snippet" class="space-y-5">
       <Field label="Title (optional)" name="title" placeholder="My snippet" />
       <div>

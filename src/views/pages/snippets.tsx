@@ -3,13 +3,18 @@ import { fullUrl } from "../../lib/config";
 import { formatNumber, timeAgo } from "../../lib/format";
 import { Layout } from "../layout";
 import {
+  ArrowUpRightIcon,
   ClipboardScript,
   CopyIcon,
-  FilterRow,
+  KindBadge,
+  PageHero,
   type PageMetaView,
   Pagination,
+  PanelSearch,
   PlusIcon,
+  RotateIcon,
   Sparkline,
+  TrashIcon,
 } from "./_shared";
 
 export type SnippetRow = {
@@ -23,110 +28,122 @@ export type SnippetRow = {
   spark: number[];
 };
 
-export const Snippets: FC<{ rows: SnippetRow[]; now: Date; meta: PageMetaView }> = ({
-  rows,
-  now,
-  meta,
-}) => (
+export const Snippets: FC<{
+  rows: SnippetRow[];
+  now: Date;
+  meta: PageMetaView;
+}> = ({ rows, now, meta }) => (
   <Layout title="Snippets" authed active="snippets">
-    <header class="page-header">
-      <div>
-        <span class="section-label">Snippets</span>
-        <h1 class="font-display text-5xl">Code snippets</h1>
-        <p class="lede">Multi-file pastes with Shiki syntax highlighting and quiet view counts.</p>
-      </div>
-      <a href="/admin/new/snippet" class="btn btn-primary">
-        <PlusIcon /> New snippet
-      </a>
-    </header>
-
-    <section class="card overflow-hidden">
-      <FilterRow
+    <PageHero
+      size="sm"
+      eyebrow="Snippets"
+      title={
+        <>
+          Paste file <span class="it">share it</span>
+        </>
+      }
+      lede="Multi-file snippets with Shiki syntax highlighting"
+      cta={
+        <a href="/admin/new/snippet">
+          <PlusIcon /> New snippet
+        </a>
+      }
+    >
+      <PanelSearch
         basePath="/admin/snippets"
         q={meta.q}
         placeholder="Search slug, title, or description…"
-        total={meta.total}
-        noun="snippet"
       />
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Slug</th>
-            <th>Title</th>
-            <th class="text-right!">Files</th>
-            <th class="text-right!">Views</th>
-            <th>Last 7 days</th>
-            <th>Created</th>
-            <th class="text-right!">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => {
-            const url = fullUrl("snippet", r.slug);
-            const expired = !!(r.expiresAt && r.expiresAt <= now);
-            return (
-              <tr class={expired ? "expired" : ""}>
-                <td>
-                  <div class="flex items-center gap-2">
-                    <a class="slug" href={`/s/${r.slug}`} title={r.title ?? r.slug}>
-                      <span class="slug-prefix">/s/</span>
-                      {r.slug}
-                    </a>
-                    {expired && <span class="pill pill-muted">expired</span>}
-                  </div>
-                </td>
-                <td class="max-w-xs truncate">{r.title ?? "Untitled"}</td>
-                <td class="text-right tabular-nums text-(--color-text-muted)">{r.fileCount}</td>
-                <td class="text-right tabular-nums">{formatNumber(r.views)}</td>
-                <td>
-                  <Sparkline values={r.spark} />
-                </td>
-                <td class="text-(--color-text-muted)" title={r.createdAt.toISOString()}>
-                  {timeAgo(r.createdAt, now)}
-                </td>
-                <td>
-                  <div class="flex justify-end gap-2">
-                    <button
-                      type="button"
-                      class="icon-btn copy-btn"
-                      data-clipboard-text={url}
-                      title="Copy full URL"
-                      aria-label="Copy full URL"
-                    >
-                      <CopyIcon />
-                    </button>
-                    <form method="post" action={`/admin/snippets/${r.id}/expire`} class="inline">
-                      <button type="submit" class="btn btn-sm btn-danger">
-                        {expired ? "Unexpire" : "Expire"}
-                      </button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-          {rows.length === 0 && (
-            <tr>
-              <td colspan={7}>
-                <div class="empty-state">
-                  <p class="empty-title">{meta.q ? "No matches" : "No snippets yet"}</p>
-                  <p>
-                    {meta.q ? (
-                      "Try a different search term, or clear the filter."
-                    ) : (
-                      <>
-                        Hit <span class="kbd">+ New snippet</span> to paste your first one.
-                      </>
-                    )}
-                  </p>
-                </div>
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+    </PageHero>
+
+    <div class="share-list">
+      <div class="share-list-head">
+        <h2>Your snippets</h2>
+        <span class="count">
+          {meta.total} {meta.total === 1 ? "snippet" : "snippets"}
+          {meta.q && " match"}
+        </span>
+      </div>
+
+      {rows.map((r) => {
+        const url = fullUrl("snippet", r.slug);
+        const expired = !!(r.expiresAt && r.expiresAt <= now);
+        return (
+          <div class={`share-row cols-7${expired ? " expired" : ""}`}>
+            <KindBadge kind="snippet" />
+            <a
+              class="body-link"
+              href={`/s/${r.slug}`}
+              title={r.title ?? r.slug}
+            >
+              <span class="lbl">{r.title ?? "Untitled snippet"}</span>
+              <span class="slg">
+                <span class="pfx">/s/</span>
+                {r.slug}
+                {expired && " · expired"}
+              </span>
+            </a>
+            <span class="meta-col">
+              {r.fileCount} file{r.fileCount === 1 ? "" : "s"}
+            </span>
+            <span class="sp">
+              <Sparkline values={r.spark} />
+            </span>
+            <span class="vv">
+              {formatNumber(r.views)}
+              <small>views</small>
+            </span>
+            <span class="wn">{timeAgo(r.createdAt, now)}</span>
+            <span class="actions">
+              <button
+                type="button"
+                class="icon-btn copy-btn"
+                data-clipboard-text={url}
+                title="Copy full URL"
+                aria-label="Copy full URL"
+              >
+                <CopyIcon />
+              </button>
+              <a
+                href={`/s/${r.slug}`}
+                class="icon-btn"
+                title="Open"
+                aria-label="Open"
+              >
+                <ArrowUpRightIcon />
+              </a>
+              <form method="post" action={`/admin/snippets/${r.id}/expire`}>
+                <button
+                  type="submit"
+                  class="icon-btn"
+                  title={expired ? "Unexpire" : "Expire"}
+                  aria-label={expired ? "Unexpire" : "Expire"}
+                >
+                  {expired ? <RotateIcon /> : <TrashIcon />}
+                </button>
+              </form>
+            </span>
+          </div>
+        );
+      })}
+
+      {rows.length === 0 && (
+        <div class="empty-state">
+          <p class="empty-title">{meta.q ? "No matches" : "No snippets yet"}</p>
+          <p>
+            {meta.q ? (
+              "Try a different search term, or clear the filter."
+            ) : (
+              <>
+                Hit <span class="kbd">+ New snippet</span> to paste your first
+                one.
+              </>
+            )}
+          </p>
+        </div>
+      )}
       <Pagination meta={meta} />
-    </section>
+    </div>
 
     <ClipboardScript />
   </Layout>

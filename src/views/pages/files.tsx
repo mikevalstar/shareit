@@ -3,12 +3,17 @@ import { fullUrl, siteUrl } from "../../lib/config";
 import { formatNumber, formatSize, timeAgo } from "../../lib/format";
 import { Layout } from "../layout";
 import {
+  ArrowUpRightIcon,
   ClipboardScript,
   CopyIcon,
-  FilterRow,
+  KindBadge,
+  PageHero,
   type PageMetaView,
   Pagination,
+  PanelSearch,
+  RotateIcon,
   Sparkline,
+  TrashIcon,
 } from "./_shared";
 
 export type FileRow = {
@@ -32,151 +37,145 @@ export const Files: FC<{
   const host = hostOf(siteUrl);
   return (
     <Layout title="Files" authed active="files">
-      <header class="page-header">
-        <div>
-          <span class="section-label">Files</span>
-          <h1 class="font-display text-5xl">Shared files</h1>
-          <p class="lede">
-            Upload a file — or drag one anywhere on this page — and track its downloads.
-          </p>
-        </div>
-        <span class="text-sm text-(--color-text-soft)">
-          {meta.total} {meta.total === 1 ? "file" : "files"}
-        </span>
-      </header>
-
-      <section class="card p-5">
-        <form
-          id="upload-form"
-          method="post"
-          action="/admin/files"
-          enctype="multipart/form-data"
-          class="grid gap-4 sm:grid-cols-[1.4fr_1fr_auto]"
-        >
-          <div>
-            <label class="label" for="file">
-              File
-            </label>
-            <input
-              id="file"
-              type="file"
-              name="file"
-              required
-              class="input file:mr-3 file:rounded file:border-0 file:bg-(--color-muted-bg) file:px-3 file:py-1.5 file:text-(--color-text)"
-            />
-            <span class="help">Tip: drop a file anywhere on this page to upload instantly.</span>
-          </div>
-          <div>
-            <label class="label" for="slug">
-              Slug
-            </label>
-            <div class="input-group">
-              <span class="prefix">{host}/f/</span>
-              <input
-                id="slug"
-                type="text"
-                name="slug"
-                value={suggestedSlug}
-                pattern="[a-zA-Z0-9_\-]{1,40}"
-                class="input font-mono"
-              />
-            </div>
-          </div>
-          <div class="flex items-end">
-            <button type="submit" class="btn btn-primary">
-              Upload
-            </button>
-          </div>
-        </form>
-      </section>
-
-      <section class="card mt-8 overflow-hidden">
-        <FilterRow
+      <PageHero
+        size="sm"
+        eyebrow="Files"
+        title={
+          <>
+            Drop a file, <span class="it">share a link.</span>
+          </>
+        }
+        lede="Upload anything, or drag it anywhere on this page."
+      >
+        <PanelSearch
           basePath="/admin/files"
           q={meta.q}
           placeholder="Search slug, filename, or mime…"
-          total={meta.total}
-          noun="file"
         />
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Slug</th>
-              <th>Filename</th>
-              <th class="text-right!">Size</th>
-              <th class="text-right!">Views</th>
-              <th>Last 7 days</th>
-              <th>Created</th>
-              <th class="text-right!">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => {
-              const url = fullUrl("file", r.slug);
-              const expired = !!(r.expiresAt && r.expiresAt <= now);
-              return (
-                <tr class={expired ? "expired" : ""}>
-                  <td>
-                    <div class="flex items-center gap-2">
-                      <a class="slug" href={`/f/${r.slug}`} title={r.filename}>
-                        <span class="slug-prefix">/f/</span>
-                        {r.slug}
-                      </a>
-                      {expired && <span class="pill pill-muted">expired</span>}
-                    </div>
-                  </td>
-                  <td class="max-w-xs truncate text-(--color-text-muted)" title={r.filename}>
-                    {r.filename}
-                  </td>
-                  <td class="text-right tabular-nums text-(--color-text-muted)">
-                    {formatSize(r.size)}
-                  </td>
-                  <td class="text-right tabular-nums">{formatNumber(r.views)}</td>
-                  <td>
-                    <Sparkline values={r.spark} />
-                  </td>
-                  <td class="text-(--color-text-muted)" title={r.createdAt.toISOString()}>
-                    {timeAgo(r.createdAt, now)}
-                  </td>
-                  <td>
-                    <div class="flex justify-end gap-2">
-                      <button
-                        type="button"
-                        class="icon-btn copy-btn"
-                        data-clipboard-text={url}
-                        title="Copy full URL"
-                        aria-label="Copy full URL"
-                      >
-                        <CopyIcon />
-                      </button>
-                      <form method="post" action={`/admin/files/${r.id}/expire`} class="inline">
-                        <button type="submit" class="btn btn-sm btn-danger">
-                          {expired ? "Unexpire" : "Expire"}
-                        </button>
-                      </form>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-            {rows.length === 0 && (
-              <tr>
-                <td colspan={7}>
-                  <div class="empty-state">
-                    <p class="empty-title">{meta.q ? "No matches" : "No files yet"}</p>
-                    <p>
-                      {meta.q
-                        ? "Try a different search term, or clear the filter."
-                        : "Upload one above — or drop it anywhere on this page."}
-                    </p>
-                  </div>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      </PageHero>
+
+      <div class="share-list">
+        <section class="create-bar">
+          <form
+            id="upload-form"
+            method="post"
+            action="/admin/files"
+            enctype="multipart/form-data"
+            class="grid gap-3 sm:grid-cols-[1.4fr_1fr_auto] items-end"
+          >
+            <div>
+              <label class="label" for="file">
+                File
+              </label>
+              <input
+                id="file"
+                type="file"
+                name="file"
+                required
+                class="input file:mr-3 file:rounded file:border-0 file:bg-(--color-muted-bg) file:px-3 file:py-1.5 file:text-(--color-text)"
+              />
+              <span class="help">
+                Tip: drop a file anywhere on this page to upload instantly.
+              </span>
+            </div>
+            <div>
+              <label class="label" for="slug">
+                Slug
+              </label>
+              <div class="input-group">
+                <span class="prefix">{host}/f/</span>
+                <input
+                  id="slug"
+                  type="text"
+                  name="slug"
+                  value={suggestedSlug}
+                  pattern="[a-zA-Z0-9_\-]{1,40}"
+                  class="input font-mono"
+                />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">
+              Upload
+            </button>
+          </form>
+        </section>
+
+        <div class="share-list-head">
+          <h2>Your files</h2>
+          <span class="count">
+            {meta.total} {meta.total === 1 ? "file" : "files"}
+            {meta.q && " match"}
+          </span>
+        </div>
+
+        {rows.map((r) => {
+          const url = fullUrl("file", r.slug);
+          const expired = !!(r.expiresAt && r.expiresAt <= now);
+          return (
+            <div class={`share-row cols-7${expired ? " expired" : ""}`}>
+              <KindBadge kind="file" />
+              <a class="body-link" href={`/f/${r.slug}`} title={r.filename}>
+                <span class="lbl">{r.filename}</span>
+                <span class="slg">
+                  <span class="pfx">/f/</span>
+                  {r.slug}
+                  {expired && " · expired"}
+                </span>
+              </a>
+              <span class="meta-col">{formatSize(r.size)}</span>
+              <span class="sp">
+                <Sparkline values={r.spark} />
+              </span>
+              <span class="vv">
+                {formatNumber(r.views)}
+                <small>views</small>
+              </span>
+              <span class="wn">{timeAgo(r.createdAt, now)}</span>
+              <span class="actions">
+                <button
+                  type="button"
+                  class="icon-btn copy-btn"
+                  data-clipboard-text={url}
+                  title="Copy full URL"
+                  aria-label="Copy full URL"
+                >
+                  <CopyIcon />
+                </button>
+                <a
+                  href={`/f/${r.slug}`}
+                  class="icon-btn"
+                  title="Open"
+                  aria-label="Open"
+                >
+                  <ArrowUpRightIcon />
+                </a>
+                <form method="post" action={`/admin/files/${r.id}/expire`}>
+                  <button
+                    type="submit"
+                    class="icon-btn"
+                    title={expired ? "Unexpire" : "Expire"}
+                    aria-label={expired ? "Unexpire" : "Expire"}
+                  >
+                    {expired ? <RotateIcon /> : <TrashIcon />}
+                  </button>
+                </form>
+              </span>
+            </div>
+          );
+        })}
+
+        {rows.length === 0 && (
+          <div class="empty-state">
+            <p class="empty-title">{meta.q ? "No matches" : "No files yet"}</p>
+            <p>
+              {meta.q
+                ? "Try a different search term, or clear the filter."
+                : "Upload one above — or drop it anywhere on this page."}
+            </p>
+          </div>
+        )}
         <Pagination meta={meta} />
-      </section>
+      </div>
 
       <div id="dropzone" class="dropzone">
         <div class="dropzone-inner">

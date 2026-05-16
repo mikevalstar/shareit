@@ -161,6 +161,21 @@ admin.get("/", (c) => {
     spark: sparkFor(it._kind, it._id),
   }));
 
+  // 30-day per-day totals for the panel sparkline.
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const dayTotals = db
+    .select({ day: dayExpr, n: sql<number>`count(*)` })
+    .from(schema.events)
+    .where(gte(schema.events.createdAt, thirtyDaysAgo))
+    .groupBy(dayExpr)
+    .all();
+  const dayMap = new Map(dayTotals.map((d) => [d.day, d.n]));
+  const days30: number[] = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+    days30.push(dayMap.get(d.toISOString().slice(0, 10)) ?? 0);
+  }
+
   const meta = buildPageMeta("/admin", pq, total);
   return c.html(
     <Dashboard
@@ -172,6 +187,7 @@ admin.get("/", (c) => {
         events: totalEvents,
       }}
       trend={{ thisWeek, lastWeek }}
+      days30={days30}
       meta={meta}
     />,
   );
