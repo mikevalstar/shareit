@@ -1,7 +1,8 @@
-import { and, desc, eq, gte, inArray, isNull, like, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, like, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { db, schema } from "@/db";
+import { eventStatsForKind } from "@/lib/analytics";
 import { requireAuth } from "@/lib/auth";
 import { newId, newSlug } from "@/lib/ids";
 import { buildPageMeta, likePattern, readPageQuery } from "@/lib/pagination";
@@ -103,55 +104,11 @@ shortlinksAdmin.get("/links", (c) => {
     .all();
 
   const now = new Date();
-  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const ids = links.map((l) => l.id);
-
-  const dayExpr = sql<string>`strftime('%Y-%m-%d', ${schema.events.createdAt}, 'unixepoch')`;
-  const buckets = ids.length
-    ? db
-        .select({
-          resourceId: schema.events.resourceId,
-          day: dayExpr,
-          n: sql<number>`count(*)`,
-        })
-        .from(schema.events)
-        .where(
-          and(
-            eq(schema.events.kind, "shortlink"),
-            gte(schema.events.createdAt, sevenDaysAgo),
-            inArray(schema.events.resourceId, ids),
-          ),
-        )
-        .groupBy(schema.events.resourceId, dayExpr)
-        .all()
-    : [];
-
-  const days: string[] = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-    days.push(d.toISOString().slice(0, 10));
-  }
-  const byResource = new Map<string, Map<string, number>>();
-  for (const b of buckets) {
-    if (!byResource.has(b.resourceId)) byResource.set(b.resourceId, new Map());
-    byResource.get(b.resourceId)!.set(b.day, b.n);
-  }
-
-  const totals = ids.length
-    ? db
-        .select({
-          resourceId: schema.events.resourceId,
-          n: sql<number>`count(*)`,
-        })
-        .from(schema.events)
-        .where(and(eq(schema.events.kind, "shortlink"), inArray(schema.events.resourceId, ids)))
-        .groupBy(schema.events.resourceId)
-        .all()
-    : [];
-  const totalByResource = new Map(totals.map((t) => [t.resourceId, t.n]));
+  const stats = eventStatsForKind("shortlink", ids, now);
 
   const rows: LinkRow[] = links.map((l) => {
-    const m = byResource.get(l.id) ?? new Map<string, number>();
+    const eventStats = stats.get(l.id);
     return {
       id: l.id,
       slug: l.slug,
@@ -162,8 +119,8 @@ shortlinksAdmin.get("/links", (c) => {
       image: l.image,
       expiresAt: l.expiresAt,
       createdAt: l.createdAt,
-      views: totalByResource.get(l.id) ?? 0,
-      spark: days.map((d) => m.get(d) ?? 0),
+      views: eventStats?.views ?? 0,
+      spark: eventStats?.spark ?? [],
     };
   });
 

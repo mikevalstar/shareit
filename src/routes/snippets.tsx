@@ -2,6 +2,7 @@ import { and, asc, desc, eq, gte, inArray, isNull, like, or, sql } from "drizzle
 import { Hono } from "hono";
 import { z } from "zod";
 import { db, schema } from "@/db";
+import { eventStatsForKind } from "@/lib/analytics";
 import { isAuthed, requireAuth } from "@/lib/auth";
 import { newId, newSlug } from "@/lib/ids";
 import { buildPageMeta, likePattern, readPageQuery } from "@/lib/pagination";
@@ -41,7 +42,6 @@ snippetsAdmin.get("/snippets", (c) => {
     .all();
 
   const now = new Date();
-  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const ids = all.map((s) => s.id);
 
   const fileCounts = ids.length
@@ -57,49 +57,10 @@ snippetsAdmin.get("/snippets", (c) => {
     : [];
   const countBySnippet = new Map(fileCounts.map((f) => [f.snippetId, f.n]));
 
-  const dayExpr = sql<string>`strftime('%Y-%m-%d', ${schema.events.createdAt}, 'unixepoch')`;
-  const buckets = ids.length
-    ? db
-        .select({
-          resourceId: schema.events.resourceId,
-          day: dayExpr,
-          n: sql<number>`count(*)`,
-        })
-        .from(schema.events)
-        .where(
-          and(
-            eq(schema.events.kind, "snippet"),
-            gte(schema.events.createdAt, sevenDaysAgo),
-            inArray(schema.events.resourceId, ids),
-          ),
-        )
-        .groupBy(schema.events.resourceId, dayExpr)
-        .all()
-    : [];
-
-  const days: string[] = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-    days.push(d.toISOString().slice(0, 10));
-  }
-  const byResource = new Map<string, Map<string, number>>();
-  for (const b of buckets) {
-    if (!byResource.has(b.resourceId)) byResource.set(b.resourceId, new Map());
-    byResource.get(b.resourceId)!.set(b.day, b.n);
-  }
-
-  const totals = ids.length
-    ? db
-        .select({ resourceId: schema.events.resourceId, n: sql<number>`count(*)` })
-        .from(schema.events)
-        .where(and(eq(schema.events.kind, "snippet"), inArray(schema.events.resourceId, ids)))
-        .groupBy(schema.events.resourceId)
-        .all()
-    : [];
-  const totalByResource = new Map(totals.map((t) => [t.resourceId, t.n]));
+  const stats = eventStatsForKind("snippet", ids, now);
 
   const rows: SnippetRow[] = all.map((s) => {
-    const m = byResource.get(s.id) ?? new Map<string, number>();
+    const eventStats = stats.get(s.id);
     return {
       id: s.id,
       slug: s.slug,
@@ -107,8 +68,8 @@ snippetsAdmin.get("/snippets", (c) => {
       fileCount: countBySnippet.get(s.id) ?? 0,
       expiresAt: s.expiresAt,
       createdAt: s.createdAt,
-      views: totalByResource.get(s.id) ?? 0,
-      spark: days.map((d) => m.get(d) ?? 0),
+      views: eventStats?.views ?? 0,
+      spark: eventStats?.spark ?? [],
     };
   });
 

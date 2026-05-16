@@ -1,6 +1,7 @@
-import { and, desc, gte, inArray, like, lt, or, sql } from "drizzle-orm";
+import { and, desc, gte, like, lt, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { db, schema } from "@/db";
+import { eventDayTotals, eventKey, eventStatsForResources } from "@/lib/analytics";
 import { requireAuth } from "@/lib/auth";
 import { buildPageMeta, likePattern, readPageQuery } from "@/lib/pagination";
 import { Dashboard } from "@/views/pages";
@@ -101,80 +102,21 @@ admin.get("/", (c) => {
   const total = merged.length;
   const page = merged.slice(pq.offset, pq.offset + pq.limit);
 
-  const dayExpr = sql<string>`strftime('%Y-%m-%d', ${schema.events.createdAt}, 'unixepoch')`;
-  const pageIds = page.map((p) => p._id);
-  const buckets = pageIds.length
-    ? db
-        .select({
-          kind: schema.events.kind,
-          resourceId: schema.events.resourceId,
-          day: dayExpr,
-          n: sql<number>`count(*)`,
-        })
-        .from(schema.events)
-        .where(
-          and(
-            gte(schema.events.createdAt, sevenDaysAgo),
-            inArray(schema.events.resourceId, pageIds),
-          ),
-        )
-        .groupBy(schema.events.kind, schema.events.resourceId, dayExpr)
-        .all()
-    : [];
-
-  const viewTotals = pageIds.length
-    ? db
-        .select({
-          kind: schema.events.kind,
-          resourceId: schema.events.resourceId,
-          n: sql<number>`count(*)`,
-        })
-        .from(schema.events)
-        .where(inArray(schema.events.resourceId, pageIds))
-        .groupBy(schema.events.kind, schema.events.resourceId)
-        .all()
-    : [];
-  const viewsByKey = new Map(viewTotals.map((v) => [`${v.kind}:${v.resourceId}`, v.n]));
-
-  const days: string[] = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-    days.push(d.toISOString().slice(0, 10));
-  }
-  const byKindResource = new Map<string, Map<string, number>>();
-  for (const b of buckets) {
-    const key = `${b.kind}:${b.resourceId}`;
-    if (!byKindResource.has(key)) byKindResource.set(key, new Map());
-    byKindResource.get(key)!.set(b.day, b.n);
-  }
-  const sparkFor = (kind: string, id: string) => {
-    const m = byKindResource.get(`${kind}:${id}`) ?? new Map<string, number>();
-    return days.map((d) => m.get(d) ?? 0);
-  };
+  const stats = eventStatsForResources(
+    page.map((p) => ({ kind: p._kind, id: p._id })),
+    now,
+  );
 
   const items = page.map((it) => ({
     slug: it.slug,
     label: it.label,
     kind: it._kind,
     createdAt: it.createdAt,
-    views: viewsByKey.get(`${it._kind}:${it._id}`) ?? 0,
-    spark: sparkFor(it._kind, it._id),
+    views: stats.get(eventKey(it._kind, it._id))?.views ?? 0,
+    spark: stats.get(eventKey(it._kind, it._id))?.spark ?? [],
   }));
 
-  // 30-day per-day totals for the panel sparkline.
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const dayTotals = db
-    .select({ day: dayExpr, n: sql<number>`count(*)` })
-    .from(schema.events)
-    .where(gte(schema.events.createdAt, thirtyDaysAgo))
-    .groupBy(dayExpr)
-    .all();
-  const dayMap = new Map(dayTotals.map((d) => [d.day, d.n]));
-  const days30: number[] = [];
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-    days30.push(dayMap.get(d.toISOString().slice(0, 10)) ?? 0);
-  }
+  const days30 = eventDayTotals(now, 30);
 
   const meta = buildPageMeta("/admin", pq, total);
   return c.html(
