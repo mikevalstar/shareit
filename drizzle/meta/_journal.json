@@ -15,6 +15,13 @@
       "when": 1785623144161,
       "tag": "0001_fast_senator_kelly",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1785624750331,
+      "tag": "0002_lazy_obadiah_stane",
+      "breakpoints": true
     }
   ]
 }

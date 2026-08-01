@@ -1,7 +1,15 @@
 import type { FC, PropsWithChildren } from "hono/jsx";
 import { BrandMark } from "@/components/brand-mark";
 
-export type NavKey = "home" | "links" | "files" | "snippets" | "inbox" | "dashboard" | null;
+export type NavKey =
+  | "home"
+  | "links"
+  | "files"
+  | "snippets"
+  | "plans"
+  | "inbox"
+  | "dashboard"
+  | null;
 
 const NAV_LINK =
   "relative text-(--color-text-muted) text-[15px] font-medium hover:text-(--color-primary) after:absolute after:bottom-[-2px] after:left-1/2 after:h-0.5 after:w-0 after:bg-(--color-primary) hover:after:left-0 hover:after:w-full";
@@ -9,7 +17,7 @@ const NAV_LINK =
 const NAV_LINK_ACTIVE = "text-(--color-primary) after:!left-0 after:!w-full";
 
 const NAV_CTA =
-  "rounded-full bg-(--color-text) px-5 py-1.5 text-sm font-medium text-(--color-bg) cursor-pointer hover:bg-(--color-primary) hover:text-white";
+  "rounded-full bg-(--color-text) px-3 py-1.5 text-sm font-medium text-(--color-bg) cursor-pointer hover:bg-(--color-primary) hover:text-white sm:px-5";
 
 const BODY_BASE =
   "bg-(--color-bg) text-(--color-text) font-sans text-[17px] leading-relaxed antialiased selection:bg-(--color-primary-light) selection:text-(--color-text)";
@@ -41,15 +49,15 @@ export const Layout: FC<
           id="top-nav-wrapper"
           class="fixed inset-x-0 top-0 z-[100] border-b border-transparent bg-[color-mix(in_srgb,var(--color-bg)_80%,transparent)] [backdrop-filter:blur(14px)_saturate(130%)] [-webkit-backdrop-filter:blur(14px)_saturate(130%)]"
         >
-          <header class="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4">
+          <header class="mx-auto flex max-w-[1400px] items-center gap-5 overflow-x-auto px-4 py-4 sm:justify-between sm:px-6">
             <a
               href="/admin"
-              class="inline-flex items-center gap-2.5 text-(--color-text) hover:text-(--color-primary)"
+              class="inline-flex shrink-0 items-center gap-2.5 text-(--color-text) hover:text-(--color-primary)"
             >
               <BrandMark />
-              <span class="font-display text-2xl leading-none">ShareIt</span>
+              <span class="hidden font-display text-2xl leading-none sm:inline">ShareIt</span>
             </a>
-            <nav class="flex items-center gap-7">
+            <nav class="flex shrink-0 items-center gap-4 sm:gap-7">
               <a class={navCls("dashboard", active)} href="/admin">
                 Dashboard
               </a>
@@ -61,6 +69,9 @@ export const Layout: FC<
               </a>
               <a class={navCls("snippets", active)} href="/admin/snippets">
                 Snippets
+              </a>
+              <a class={navCls("plans", active)} href="/admin/plans">
+                Plans
               </a>
               <a class={navCls("inbox", active)} href="/admin/inbox">
                 Inbox
@@ -86,6 +97,7 @@ export const Layout: FC<
             <a href="/admin/links">Links</a>
             <a href="/admin/files">Files</a>
             <a href="/admin/snippets">Snippets</a>
+            <a href="/admin/plans">Plans</a>
             <a href="/admin/inbox">Inbox</a>
           </span>
         </footer>

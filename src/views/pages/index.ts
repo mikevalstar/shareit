@@ -6,5 +6,6 @@ export { InboxSend } from "./inbox-send";
 export { type LinkRow, Links } from "./links";
 export { Login } from "./login";
 export { NewSnippet } from "./new-snippet";
+export { type PlanRow, Plans } from "./plans";
 export { SnippetView } from "./snippet-view";
 export { type SnippetRow, Snippets } from "./snippets";

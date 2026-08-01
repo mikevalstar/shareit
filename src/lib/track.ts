@@ -3,7 +3,7 @@ import { db, schema } from "@/db";
 
 export function track(
   c: Context,
-  kind: "shortlink" | "file" | "snippet",
+  kind: "shortlink" | "file" | "snippet" | "plan",
   resourceId: string,
   action: string,
 ) {

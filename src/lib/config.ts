@@ -5,5 +5,6 @@ export const siteUrl = (
 export function fullUrl(kind: string, slug: string): string {
   if (kind === "shortlink") return `${siteUrl}/${slug}`;
   if (kind === "file") return `${siteUrl}/f/${slug}`;
+  if (kind === "plan") return `${siteUrl}/p/${slug}.html`;
   return `${siteUrl}/s/${slug}`;
 }

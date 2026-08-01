@@ -4,3 +4,4 @@ const alpha = "23456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";
 
 export const newId = customAlphabet(alpha, 21);
 export const newSlug = customAlphabet(alpha, 7);
+export const newPlanSlug = customAlphabet(alpha, 12);

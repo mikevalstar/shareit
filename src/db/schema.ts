@@ -67,11 +67,30 @@ export const inbox = sqliteTable(
   (t) => ({ createdIdx: index("inbox_created_idx").on(t.createdAt) }),
 );
 
+export const plans = sqliteTable(
+  "plans",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull().unique(),
+    title: text("title").notNull(),
+    size: integer("size").notNull(),
+    storagePath: text("storage_path").notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: ts(),
+  },
+  (t) => ({ createdIdx: index("plans_created_idx").on(t.createdAt) }),
+);
+
+export const settings = sqliteTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+});
+
 export const events = sqliteTable(
   "events",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    kind: text("kind", { enum: ["shortlink", "file", "snippet"] }).notNull(),
+    kind: text("kind", { enum: ["shortlink", "file", "snippet", "plan"] }).notNull(),
     resourceId: text("resource_id").notNull(),
     action: text("action").notNull(),
     ip: text("ip"),

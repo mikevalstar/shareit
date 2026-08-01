@@ -35,7 +35,7 @@ const SIDE_VALUE =
 
 export const Dashboard: FC<{
   items: AdminListItem[];
-  stats: { links: number; files: number; snippets: number; events: number };
+  stats: { links: number; files: number; snippets: number; plans: number; events: number };
   trend: { thisWeek: number; lastWeek: number };
   days30: number[];
   meta: PageMetaView;
@@ -63,6 +63,9 @@ export const Dashboard: FC<{
             <a class="ghost" href="/admin/snippets">
               <PlusIcon /> Snippet
             </a>
+            <a class="ghost" href="/admin/plans">
+              Plans
+            </a>
           </>
         }
         side={
@@ -79,6 +82,10 @@ export const Dashboard: FC<{
               <div class={SIDE_CELL}>
                 <div class={SIDE_LABEL}>Snippets</div>
                 <div class={SIDE_VALUE}>{stats.snippets}</div>
+              </div>
+              <div class={SIDE_CELL}>
+                <div class={SIDE_LABEL}>Plans</div>
+                <div class={SIDE_VALUE}>{stats.plans}</div>
               </div>
             </div>
             <div>
@@ -110,7 +117,7 @@ export const Dashboard: FC<{
         <FilterRow
           basePath="/admin"
           q={meta.q}
-          placeholder="Search across links, files, snippets…"
+          placeholder="Search links, files, snippets, plans…"
           total={meta.total}
           noun="item"
         />
@@ -126,7 +133,7 @@ export const Dashboard: FC<{
                   title={url}
                   label={it.label}
                   prefix={prefixFor(it.kind)}
-                  slug={it.slug}
+                  slug={it.kind === "plan" ? `${it.slug}.html` : it.slug}
                 />
               }
               spark={<Sparkline values={it.spark} />}
@@ -161,7 +168,7 @@ export const Dashboard: FC<{
           <EmptyState title={meta.q ? "No matches" : "Nothing here yet"}>
             {meta.q
               ? "Try a different search term, or clear the filter."
-              : "Create your first short link, file, or snippet from the buttons above."}
+              : "Create your first link, file, snippet, or plan from the buttons above."}
           </EmptyState>
         )}
         <Pagination meta={meta} />
@@ -181,5 +188,6 @@ function deltaPct(current: number, prior: number): number {
 function prefixFor(kind: string): string {
   if (kind === "shortlink") return "/";
   if (kind === "file") return "/f/";
+  if (kind === "plan") return "/p/";
   return "/s/";
 }

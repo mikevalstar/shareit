@@ -28,6 +28,7 @@ export function isoDate(d: Date): string {
 export function publicUrl(kind: string, slug: string) {
   if (kind === "shortlink") return `/${slug}`;
   if (kind === "file") return `/f/${slug}`;
+  if (kind === "plan") return `/p/${slug}.html`;
   return `/s/${slug}`;
 }
 
