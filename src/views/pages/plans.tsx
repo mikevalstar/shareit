@@ -2,7 +2,7 @@ import type { FC } from "hono/jsx";
 import { Button } from "@/components/button";
 import { ClipboardScript } from "@/components/clipboard-script";
 import { IconButton } from "@/components/icon-button";
-import { ArrowUpRightIcon, CopyIcon, RotateIcon } from "@/components/icons";
+import { ArrowUpRightIcon, CopyIcon, RotateIcon, TrashIcon } from "@/components/icons";
 import { Input } from "@/components/input";
 import { KindBadge } from "@/components/kind-badge";
 import { HeroIt, PageHero } from "@/components/page-hero";
@@ -133,6 +133,20 @@ export const Plans: FC<{
                 <IconButton as="a" href={`/p/${row.slug}.html`} title="Open" aria-label="Open">
                   <ArrowUpRightIcon />
                 </IconButton>
+                <form
+                  method="post"
+                  action={`/admin/plans/${row.id}/delete`}
+                  onsubmit={`return confirm(${JSON.stringify(`Delete “${row.title}” permanently? Its public URL will stop working.`)})`}
+                >
+                  <IconButton
+                    type="submit"
+                    class="text-(--color-danger) hover:!border-(--color-danger)"
+                    title="Delete permanently"
+                    aria-label={`Delete ${row.title} permanently`}
+                  >
+                    <TrashIcon />
+                  </IconButton>
+                </form>
               </>
             }
           />

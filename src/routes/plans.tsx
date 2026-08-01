@@ -1,7 +1,7 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
-import { mkdir } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { desc, eq, like, or, sql } from "drizzle-orm";
+import { and, desc, eq, like, or, sql } from "drizzle-orm";
 import { type Context, Hono } from "hono";
 import { db, schema } from "@/db";
 import { eventStatsForKind } from "@/lib/analytics";
@@ -184,6 +184,21 @@ plansAdmin.post("/plans/key/regenerate", (c) => {
     .values({ key: PLAN_KEY_SETTING, value })
     .onConflictDoUpdate({ target: schema.settings.key, set: { value } })
     .run();
+  return c.redirect("/admin/plans");
+});
+
+plansAdmin.post("/plans/:id/delete", async (c) => {
+  const id = c.req.param("id");
+  const row = db.select().from(schema.plans).where(eq(schema.plans.id, id)).get();
+  if (!row) return c.notFound();
+
+  db.transaction((tx) => {
+    tx.delete(schema.events)
+      .where(and(eq(schema.events.kind, "plan"), eq(schema.events.resourceId, row.id)))
+      .run();
+    tx.delete(schema.plans).where(eq(schema.plans.id, row.id)).run();
+  });
+  await rm(row.storagePath, { force: true });
   return c.redirect("/admin/plans");
 });
 
