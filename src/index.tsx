@@ -20,7 +20,7 @@ app.get("/", async (c) => c.html(<Home authed={await isAuthed(c)} />));
 app.get("/login", (c) => c.html(<Login />));
 app.post("/login", async (c) => {
   const form = await c.req.parseBody();
-  const password = typeof form["password"] === "string" ? form["password"] : "";
+  const password = typeof form.password === "string" ? form.password : "";
   if (!(await verifyPassword(password))) return c.html(<Login error="Invalid password" />, 401);
   await createSession(c);
   return c.redirect("/admin");

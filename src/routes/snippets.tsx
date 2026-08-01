@@ -81,11 +81,11 @@ snippetsAdmin.get("/new/snippet", (c) => c.html(<NewSnippet />));
 
 snippetsAdmin.post("/new/snippet", async (c) => {
   const form = await c.req.parseBody({ all: true });
-  const slugCheck = slugSchema.safeParse(form["slug"]);
+  const slugCheck = slugSchema.safeParse(form.slug);
   if (!slugCheck.success) return c.text("Invalid slug", 400);
 
-  const title = typeof form["title"] === "string" ? form["title"] : "";
-  const description = typeof form.description === "string" ? form["description"] : "";
+  const title = typeof form.title === "string" ? form.title : "";
+  const description = typeof form.description === "string" ? form.description : "";
 
   const indices = new Set<number>();
   for (const key of Object.keys(form)) {

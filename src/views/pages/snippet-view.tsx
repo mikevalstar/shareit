@@ -82,7 +82,7 @@ export const SnippetView: FC<{
         eyebrow={`Snippet · /s/${slug}`}
         title={
           title ? (
-            <>{title}</>
+            title
           ) : (
             <>
               <HeroIt>Untitled</HeroIt> snippet

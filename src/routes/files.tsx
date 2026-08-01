@@ -69,9 +69,9 @@ filesAdmin.get("/files", (c) => {
 
 filesAdmin.post("/files", async (c) => {
   const form = await c.req.parseBody();
-  const file = form["file"];
+  const file = form.file;
   if (!(file instanceof File) || file.size === 0) return c.text("No file", 400);
-  const slugInput = slugSchema.safeParse(form["slug"]);
+  const slugInput = slugSchema.safeParse(form.slug);
   if (!slugInput.success) return c.text("Invalid slug", 400);
   const slug = slugInput.data || newSlug();
   const id = newId();
