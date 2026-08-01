@@ -1,6 +1,8 @@
 export { Dashboard } from "./dashboard";
 export { type FileRow, Files } from "./files";
 export { Home } from "./home";
+export { Inbox, type InboxRow } from "./inbox";
+export { InboxSend } from "./inbox-send";
 export { type LinkRow, Links } from "./links";
 export { Login } from "./login";
 export { NewSnippet } from "./new-snippet";

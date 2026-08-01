@@ -1,15 +1,17 @@
 import type { FC } from "hono/jsx";
-import { Code as LCode, File as LFile, Link as LLink } from "lucide-static";
+import { Code as LCode, File as LFile, Inbox as LInbox, Link as LLink } from "lucide-static";
 import { Icon } from "./icons";
 
 const KIND_BG: Record<string, string> = {
   file: "bg-(--color-accent-amber)",
   snippet: "bg-(--color-secondary)",
   shortlink: "bg-(--color-primary)",
+  inbox: "bg-(--color-text)",
 };
 
 export const KindBadge: FC<{ kind: string; size?: number }> = ({ kind, size = 14 }) => {
-  const svg = kind === "file" ? LFile : kind === "snippet" ? LCode : LLink;
+  const svg =
+    kind === "file" ? LFile : kind === "snippet" ? LCode : kind === "inbox" ? LInbox : LLink;
   return (
     <span
       class={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white ${KIND_BG[kind] ?? KIND_BG.shortlink}`}

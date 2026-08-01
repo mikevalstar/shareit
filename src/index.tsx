@@ -3,6 +3,7 @@ import { serveStatic } from "hono/bun";
 import { createSession, destroySession, isAuthed, verifyPassword } from "./lib/auth";
 import { admin } from "./routes/admin";
 import { filePublic, filesAdmin } from "./routes/files";
+import { inboxAdmin, inboxPublic } from "./routes/inbox";
 import { shortlinkPublic, shortlinksAdmin } from "./routes/shortlinks";
 import { snippetPublic, snippetsAdmin } from "./routes/snippets";
 import { Home, Login } from "./views/pages";
@@ -33,9 +34,11 @@ app.route("/admin", admin);
 app.route("/admin", shortlinksAdmin);
 app.route("/admin", filesAdmin);
 app.route("/admin", snippetsAdmin);
+app.route("/admin", inboxAdmin);
 
 app.route("/", filePublic);
 app.route("/", snippetPublic);
+app.route("/", inboxPublic); // before shortlinkPublic — owns /inbox
 app.route("/", shortlinkPublic); // last: catches /:slug
 
 app.notFound((c) => c.text("Not found", 404));

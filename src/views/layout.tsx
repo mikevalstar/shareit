@@ -1,7 +1,7 @@
 import type { FC, PropsWithChildren } from "hono/jsx";
 import { BrandMark } from "@/components/brand-mark";
 
-export type NavKey = "home" | "links" | "files" | "snippets" | "dashboard" | null;
+export type NavKey = "home" | "links" | "files" | "snippets" | "inbox" | "dashboard" | null;
 
 const NAV_LINK =
   "relative text-(--color-text-muted) text-[15px] font-medium hover:text-(--color-primary) after:absolute after:bottom-[-2px] after:left-1/2 after:h-0.5 after:w-0 after:bg-(--color-primary) hover:after:left-0 hover:after:w-full";
@@ -62,6 +62,9 @@ export const Layout: FC<
               <a class={navCls("snippets", active)} href="/admin/snippets">
                 Snippets
               </a>
+              <a class={navCls("inbox", active)} href="/admin/inbox">
+                Inbox
+              </a>
               <form method="post" action="/logout" class="inline">
                 <button class={NAV_CTA} type="submit">
                   Logout
@@ -83,6 +86,7 @@ export const Layout: FC<
             <a href="/admin/links">Links</a>
             <a href="/admin/files">Files</a>
             <a href="/admin/snippets">Snippets</a>
+            <a href="/admin/inbox">Inbox</a>
           </span>
         </footer>
       )}

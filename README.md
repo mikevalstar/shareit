@@ -9,6 +9,7 @@ Built with [Hono](https://hono.dev) + JSX SSR, SQLite via [Drizzle ORM](https://
 - **Short URLs** at `/<slug>` with visit tracking (IP, UA, referer).
 - **Files** at `/f/<slug>` — uploads stored on disk, downloads tracked.
 - **Snippets** at `/s/<slug>` — multi-file, syntax-highlighted via highlight.js.
+- **Inbox** at `/inbox` — a public file drop with private admin downloads.
 - Single-user admin (argon2 password from env, cookie sessions).
 - Tailwind v4, dark-mode by default.
 
@@ -40,7 +41,9 @@ Visit `http://localhost:3213`, log in, and start sharing.
 | `/admin`                 | Dashboard with view counts       |
 | `/admin/links`           | Manage short links + create inline |
 | `/admin/files`           | Manage files + drag-drop upload  |
+| `/admin/inbox`           | Review, download, and delete inbox files |
 | `/admin/new/snippet`     | Create snippet (multi-file)      |
+| `/inbox`                 | Public inbox file drop           |
 | `/:slug`                 | Public short URL redirect        |
 | `/f/:slug`               | Public file download             |
 | `/s/:slug`               | Public snippet view              |
@@ -53,6 +56,8 @@ bun run start       # runs the server
 ```
 
 Persistent state lives in `./data` (SQLite) and `./uploads` (files). Back up both.
+Inbox storage defaults to `./uploads/inbox`; override it with `INBOX_DIR`. The maximum
+accepted inbox upload defaults to 50 MiB and can be set in bytes with `INBOX_MAX_BYTES`.
 
 ## Notes
 

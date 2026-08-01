@@ -5,6 +5,7 @@ import {
   Code as LCode,
   Copy as LCopy,
   File as LFile,
+  Inbox as LInbox,
   Link as LLink,
   Plus as LPlus,
   RotateCcw as LRotate,
@@ -34,6 +35,7 @@ export const Icon: FC<{ svg: string; size?: number; class?: string }> = ({
 export const CopyIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LCopy} size={size} />;
 export const LinkIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LLink} size={size} />;
 export const FileIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LFile} size={size} />;
+export const InboxIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LInbox} size={size} />;
 export const CodeIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LCode} size={size} />;
 export const PlusIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LPlus} size={size} />;
 export const TrashIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LTrash} size={size} />;

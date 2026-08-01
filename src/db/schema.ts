@@ -50,6 +50,23 @@ export const snippetFiles = sqliteTable(
   (t) => ({ snippetIdx: index("snippet_files_snippet_idx").on(t.snippetId) }),
 );
 
+export const inbox = sqliteTable(
+  "inbox",
+  {
+    id: text("id").primaryKey(),
+    filename: text("filename").notNull(),
+    mime: text("mime").notNull(),
+    size: integer("size").notNull(),
+    storagePath: text("storage_path").notNull(),
+    note: text("note"),
+    ip: text("ip"),
+    userAgent: text("user_agent"),
+    readAt: integer("read_at", { mode: "timestamp" }),
+    createdAt: ts(),
+  },
+  (t) => ({ createdIdx: index("inbox_created_idx").on(t.createdAt) }),
+);
+
 export const events = sqliteTable(
   "events",
   {
