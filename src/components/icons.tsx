@@ -5,8 +5,11 @@ import {
   Code as LCode,
   Copy as LCopy,
   File as LFile,
+  FileText as LFileText,
   Inbox as LInbox,
+  LayoutDashboard as LLayoutDashboard,
   Link as LLink,
+  Menu as LMenu,
   Plus as LPlus,
   RotateCcw as LRotate,
   Search as LSearch,
@@ -42,7 +45,18 @@ export const TrashIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LTrash}
 export const RotateIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LRotate} size={size} />;
 export const CheckIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LCheck} size={size} />;
 export const SearchIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LSearch} size={size} />;
-export const XIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LX} size={size} />;
+export const XIcon: FC<{ size?: number; class?: string }> = ({ size, class: cls2 }) => (
+  <Icon svg={LX} size={size} class={cls2} />
+);
+export const MenuIcon: FC<{ size?: number; class?: string }> = ({ size, class: cls2 }) => (
+  <Icon svg={LMenu} size={size} class={cls2} />
+);
+export const DashboardIcon: FC<{ size?: number }> = ({ size }) => (
+  <Icon svg={LLayoutDashboard} size={size} />
+);
+export const FileTextIcon: FC<{ size?: number }> = ({ size }) => (
+  <Icon svg={LFileText} size={size} />
+);
 export const ArrowUpRightIcon: FC<{ size?: number }> = ({ size }) => (
   <Icon svg={LArrowUpRight} size={size} />
 );

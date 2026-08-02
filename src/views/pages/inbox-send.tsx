@@ -17,7 +17,7 @@ export const InboxSend: FC<Props> = ({ ok, error, maxBytes }) => (
     <div class="mx-auto flex min-h-[calc(100vh-6rem)] max-w-[640px] flex-col items-center justify-center py-12">
       <a
         href="/"
-        class="mb-7 inline-flex items-center gap-2.5 text-(--color-text) hover:text-(--color-primary)"
+        class="mb-7 inline-flex items-center gap-3 text-(--color-text) hover:text-(--color-primary)"
       >
         <BrandMark />
         <span class="font-display text-2xl leading-none">ShareIt</span>

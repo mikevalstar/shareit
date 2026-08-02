@@ -1,9 +1,13 @@
 import type { FC, PropsWithChildren } from "hono/jsx";
 
-const PANEL_BLEED = "relative -mt-10 mb-11 mx-[calc(50%-50vw)]";
+/* --nav-h is set on <body> for authed pages, so the panel bleeds up behind the fixed
+   nav bar and becomes its background. It falls back to 0 on public pages, which have no bar. */
+const PANEL_BLEED = "relative mt-[calc(-2.5rem-var(--nav-h,0rem))] mb-11 mx-[calc(50%-50vw)]";
 
+/* First gradient in the list paints on top: a scrim that keeps white nav controls
+   above 4.5:1 over the bright top-right wash. */
 const PANEL_BASE =
-  "relative overflow-hidden bg-(--color-primary) text-white px-6 after:pointer-events-none after:absolute after:inset-0 after:content-[''] after:bg-[radial-gradient(900px_600px_at_85%_0%,hsl(215_90%_65%/0.55),transparent_60%),radial-gradient(700px_500px_at_0%_110%,hsl(250_70%_45%/0.45),transparent_55%)]";
+  "relative overflow-hidden bg-(--color-primary) text-white px-6 after:pointer-events-none after:absolute after:inset-0 after:content-[''] after:bg-[linear-gradient(to_bottom,hsl(220_45%_12%/0.22),transparent_7rem),radial-gradient(900px_600px_at_85%_0%,hsl(215_90%_65%/0.55),transparent_60%),radial-gradient(700px_500px_at_0%_110%,hsl(250_70%_45%/0.45),transparent_55%)]";
 
 export const PageHero: FC<
   PropsWithChildren<{
@@ -16,7 +20,13 @@ export const PageHero: FC<
   }>
 > = ({ eyebrow, title, lede, side, cta, size, children }) => (
   <div class={PANEL_BLEED}>
-    <div class={`${PANEL_BASE} ${size === "sm" ? "pt-24 pb-10" : "pt-26 pb-13"}`}>
+    <div
+      class={`${PANEL_BASE} ${
+        size === "sm"
+          ? "pt-[calc(6rem+var(--nav-h,0rem))] pb-10"
+          : "pt-[calc(6.5rem+var(--nav-h,0rem))] pb-13"
+      }`}
+    >
       <div
         class={`relative mx-auto grid max-w-[1400px] gap-10 px-6 ${side ? "md:grid-cols-[1.4fr_1fr] md:items-end md:gap-16" : "grid-cols-1"}`}
       >
