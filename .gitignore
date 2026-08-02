@@ -15,6 +15,9 @@ logs
 _.log
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
+# personal, machine-local Claude Code instructions (may contain local credentials)
+CLAUDE.local.md
+
 # dotenv environment variable files
 .env
 .env.development.local
