@@ -56,7 +56,7 @@ src/
     voter.ts          long-lived poll voter cookie
     polls.ts          poll reads/writes shared by the admin form and the API
     share-key.ts      X-Share-Key (stored in settings) guarding /api/*
-    og-image.ts       satori + resvg PNG for poll link previews
+    og-image.ts       satori + resvg PNGs: poll link preview + ranked results image
   routes/
     admin.tsx         /admin dashboard (lists + view counts)
     shortlinks.tsx    /admin/new/shortlink + public /:slug redirect

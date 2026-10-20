@@ -8,6 +8,7 @@ import {
   Download as LDownload,
   File as LFile,
   FileText as LFileText,
+  Image as LImage,
   Inbox as LInbox,
   LayoutDashboard as LLayoutDashboard,
   Link as LLink,
@@ -65,6 +66,7 @@ export const FileTextIcon: FC<{ size?: number }> = ({ size }) => (
 export const DownloadIcon: FC<{ size?: number }> = ({ size }) => (
   <Icon svg={LDownload} size={size} />
 );
+export const ImageIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LImage} size={size} />;
 export const VoteIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LVote} size={size} />;
 export const BarChartIcon: FC<{ size?: number }> = ({ size }) => (
   <Icon svg={LBarChart} size={size} />

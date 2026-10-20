@@ -1,7 +1,7 @@
 import type { FC } from "hono/jsx";
 import { Card } from "@/components/card";
 import { cls } from "@/components/cls";
-import { DownloadIcon, PencilIcon } from "@/components/icons";
+import { DownloadIcon, ImageIcon, PencilIcon } from "@/components/icons";
 import { PageHero } from "@/components/page-hero";
 import { formatNumber, timeAgo } from "@/lib/format";
 import { Layout } from "@/views/layout";
@@ -30,11 +30,19 @@ export const PollResults: FC<PollResultsProps> = (p) => {
         size="sm"
         eyebrow={`Results · /poll/${p.slug}`}
         title={p.title}
-        lede={`${formatNumber(total)} ${total === 1 ? "person" : "people"} voted · ${pollStatus(p.closesAt, p.now)}`}
+        lede={
+          <>
+            {formatNumber(total)} {total === 1 ? "person" : "people"} voted ·{" "}
+            {pollStatus(p.closesAt, p.now)} · Live · refreshes every 30s
+          </>
+        }
         cta={
           <>
-            <a href={`/admin/polls/${p.id}/results.csv`}>
-              <DownloadIcon /> Download CSV
+            <a href={`/admin/polls/${p.id}/results.png`} download={`${p.slug}-results.png`}>
+              <ImageIcon /> Results image
+            </a>
+            <a class="ghost" href={`/admin/polls/${p.id}/results.csv`}>
+              <DownloadIcon /> CSV
             </a>
             <a class="ghost" href={`/poll/${p.slug}`}>
               Open poll
@@ -105,6 +113,23 @@ export const PollResults: FC<PollResultsProps> = (p) => {
           </table>
         </Card>
       </div>
+      <script dangerouslySetInnerHTML={{ __html: LIVE_REFRESH }} />
     </Layout>
   );
 };
+
+/* Re-fetch this page and swap <main> in place: keeps scroll, no full reload.
+   Parsed scripts are inert, so the interval below survives the swap. */
+const LIVE_REFRESH = `
+  const refreshResults = async () => {
+    if (document.hidden) return;
+    try {
+      const res = await fetch(location.href, { headers: { accept: 'text/html' } });
+      if (!res.ok) return;
+      const next = new DOMParser().parseFromString(await res.text(), 'text/html').querySelector('main');
+      if (next) document.querySelector('main').replaceChildren(...next.childNodes);
+    } catch {}
+  };
+  setInterval(refreshResults, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshResults(); });
+`;

@@ -23,11 +23,15 @@ const el = (type: string, style: Record<string, string | number>, children?: Chi
   props: { style, children },
 });
 
+type PollOption = { label: string; count: number };
+
 export type PollCard = {
   title: string;
-  options: { label: string; count: number }[];
+  options: PollOption[];
   footer: string;
 };
+
+export type PollResultsCard = PollCard & { eyebrow: string; voters: number };
 
 const W = 1200;
 const H = 630;
@@ -36,7 +40,7 @@ const AMBER = "#f5d58a";
 const INK = "#1a2030";
 
 /* The leading option's bar is always full-width, so its text flips to ink on amber. */
-function optionRow(o: { label: string; count: number }, max: number): Node {
+function optionRow(o: PollOption, max: number, value: string): Node {
   const leads = o.count === max && o.count > 0;
   const ink = leads ? INK : "white";
   return el(
@@ -76,22 +80,19 @@ function optionRow(o: { label: string; count: number }, max: number): Node {
       el(
         "div",
         { display: "flex", padding: "0 22px", fontSize: 28, fontWeight: 600, color: ink },
-        String(o.count),
+        value,
       ),
     ],
   );
 }
 
-export async function renderPollCard(card: PollCard): Promise<Uint8Array<ArrayBuffer>> {
-  const max = Math.max(1, ...card.options.map((o) => o.count));
-  const shown = card.options.slice(0, MAX_OPTIONS);
-  const more = card.options.length - shown.length;
-
-  const tree = el(
+/* Shared blue panel: eyebrow, serif title, a column of rows, footer line. */
+function frame(eyebrow: string, title: string, rows: Node[], footer: string, height?: number) {
+  return el(
     "div",
     {
       width: W,
-      height: H,
+      ...(height ? { height } : {}),
       display: "flex",
       flexDirection: "column",
       padding: "56px 72px",
@@ -111,7 +112,7 @@ export async function renderPollCard(card: PollCard): Promise<Uint8Array<ArrayBu
           opacity: 0.8,
           textTransform: "uppercase",
         },
-        "Poll · ShareIt",
+        eyebrow,
       ),
       el(
         "div",
@@ -119,33 +120,68 @@ export async function renderPollCard(card: PollCard): Promise<Uint8Array<ArrayBu
           display: "block",
           marginTop: 18,
           fontFamily: "DM Serif Display",
-          fontSize: card.title.length > 40 ? 56 : 68,
+          fontSize: title.length > 40 ? 56 : 68,
           lineHeight: 1.1,
           lineClamp: 2,
         },
-        card.title,
+        title,
       ),
-      el("div", { display: "flex", flexDirection: "column", marginTop: 34, gap: 14, flexGrow: 1 }, [
-        ...shown.map((o) => optionRow(o, max)),
-        ...(more > 0
-          ? [
-              el(
-                "div",
-                { display: "flex", fontSize: 24, opacity: 0.8 },
-                `+ ${more} more option${more === 1 ? "" : "s"}`,
-              ),
-            ]
-          : []),
-      ]),
-      el("div", { display: "flex", fontSize: 24, opacity: 0.9 }, card.footer),
+      el(
+        "div",
+        {
+          display: "flex",
+          flexDirection: "column",
+          marginTop: 34,
+          marginBottom: 28,
+          gap: 14,
+          flexGrow: 1,
+        },
+        rows,
+      ),
+      el("div", { display: "flex", fontSize: 24, opacity: 0.9 }, footer),
     ],
   );
+}
 
+/* Without a height, satori sizes the image to its content. */
+async function toPng(tree: Node, height?: number): Promise<Uint8Array<ArrayBuffer>> {
   // satori's element type is React's; our plain objects match its runtime shape.
-  const svg = await satori(tree as unknown as Parameters<typeof satori>[0], {
-    width: W,
-    height: H,
-    fonts: await fonts,
-  });
+  const svg = await satori(
+    tree as unknown as Parameters<typeof satori>[0],
+    {
+      width: W,
+      ...(height ? { height } : {}),
+      fonts: await fonts,
+    } as Parameters<typeof satori>[1],
+  );
   return new Uint8Array(new Resvg(svg, { fitTo: { mode: "width", value: W } }).render().asPng());
+}
+
+/* Link preview: fixed 1200×630, first few options in poll order. */
+export function renderPollCard(card: PollCard) {
+  const max = Math.max(1, ...card.options.map((o) => o.count));
+  const shown = card.options.slice(0, MAX_OPTIONS);
+  const more = card.options.length - shown.length;
+  const rows = shown.map((o) => optionRow(o, max, String(o.count)));
+  if (more > 0) {
+    rows.push(
+      el(
+        "div",
+        { display: "flex", fontSize: 24, opacity: 0.8 },
+        `+ ${more} more option${more === 1 ? "" : "s"}`,
+      ),
+    );
+  }
+  return toPng(frame("Poll · ShareIt", card.title, rows, card.footer, H), H);
+}
+
+/* Announcement image: every option, ranked by votes, tall enough to fit them all. */
+export function renderPollResults(card: PollResultsCard) {
+  const ranked = [...card.options].sort((a, b) => b.count - a.count);
+  const max = Math.max(1, ...ranked.map((o) => o.count));
+  const rows = ranked.map((o) => {
+    const pct = card.voters ? Math.round((o.count / card.voters) * 100) : 0;
+    return optionRow(o, max, `${o.count} · ${pct}%`);
+  });
+  return toPng(frame(card.eyebrow, card.title, rows, card.footer));
 }

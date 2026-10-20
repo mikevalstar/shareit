@@ -14,7 +14,8 @@ Built with [Hono](https://hono.dev) + JSX SSR, SQLite via [Drizzle ORM](https://
 - **Polls** at `/poll/<slug>` — single- or multi-choice, Markdown/HTML options, live results.
   Voters name themselves once and are remembered by cookie, so they can change their vote
   until the poll closes (manually or at a scheduled time). Shared links unfurl in Slack with
-  a generated preview image. The admin gets per-voter results and a CSV export.
+  a generated preview image. The admin gets per-voter results, a CSV export, and a ranked
+  results image for announcing the winner.
 - Single-user admin (argon2 password from env, cookie sessions).
 - Tailwind v4, dark-mode by default.
 
@@ -51,6 +52,7 @@ Visit `http://localhost:3213`, log in, and start sharing.
 | `/admin/new/snippet`     | Create snippet (multi-file)      |
 | `/admin/polls`           | Manage polls, open/close voting  |
 | `/admin/polls/:id/results` | Per-voter results + CSV export |
+| `/admin/polls/:id/results.png` | Ranked results image to share the winner |
 | `/inbox`                 | Public inbox file drop           |
 | `/:slug`                 | Public short URL redirect        |
 | `/f/:slug`               | Public file download             |

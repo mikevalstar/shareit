@@ -8,7 +8,7 @@ import { isAuthed, requireAuth } from "@/lib/auth";
 import { fullUrl, siteUrl } from "@/lib/config";
 import { newId, newSlug } from "@/lib/ids";
 import { plainText, renderInline, renderMarkdown } from "@/lib/markdown";
-import { renderPollCard } from "@/lib/og-image";
+import { renderPollCard, renderPollResults } from "@/lib/og-image";
 import { buildPageMeta, likePattern, readPageQuery } from "@/lib/pagination";
 import {
   isClosed,
@@ -244,6 +244,33 @@ pollsAdmin.get("/polls/:id/results", (c) => {
       voters={loadVoterRows(poll.id)}
     />,
   );
+});
+
+/* Ranked, every-option image for announcing the winner — admin only, unlike og.png. */
+pollsAdmin.get("/polls/:id/results.png", async (c) => {
+  const poll = db
+    .select()
+    .from(schema.polls)
+    .where(eq(schema.polls.id, c.req.param("id")))
+    .get();
+  if (!poll) return c.notFound();
+  const now = new Date();
+  const tally = loadTally(poll.id);
+  const png = await renderPollResults({
+    eyebrow: isClosed(poll, now) ? "Final results · ShareIt" : "Results so far · ShareIt",
+    title: poll.title,
+    options: loadOptions(poll.id).map((o) => ({
+      label: plainText(o.content),
+      count: tally.counts.get(o.id) ?? 0,
+    })),
+    voters: tally.voters,
+    footer: cardFooter(poll, tally.voters, now),
+  });
+  return c.body(png, 200, {
+    "Content-Type": "image/png",
+    "Content-Disposition": `inline; filename="${poll.slug}-results.png"`,
+    "Cache-Control": "no-store",
+  });
 });
 
 const csvCell = (v: string) => (/[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
