@@ -42,6 +42,8 @@ type ShareRowProps = {
   time: any;
   actions: any;
   expired?: boolean;
+  /* Room for five icon buttons instead of three. */
+  wideActions?: boolean;
 };
 
 const ROW_BASE =
@@ -56,10 +58,14 @@ export const ShareRow: FC<ShareRowProps> = ({
   time,
   actions,
   expired,
+  wideActions,
 }) => {
+  // Full literals so Tailwind's scanner sees every variant.
   const cols =
     meta !== undefined
-      ? "md:grid-cols-[2.5rem_minmax(0,1fr)_5rem_7rem_5rem_6rem_6rem]"
+      ? wideActions
+        ? "md:grid-cols-[2.5rem_minmax(0,1fr)_5rem_7rem_5rem_6rem_10.5rem]"
+        : "md:grid-cols-[2.5rem_minmax(0,1fr)_5rem_7rem_5rem_6rem_6rem]"
       : "md:grid-cols-[2.5rem_minmax(0,1fr)_7rem_5rem_6rem_6rem]";
   return (
     <div class={`${ROW_BASE} ${cols}${expired ? " opacity-55" : ""}`}>

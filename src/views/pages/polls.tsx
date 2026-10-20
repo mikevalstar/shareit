@@ -72,6 +72,7 @@ export const Polls: FC<{ rows: PollRow[]; now: Date; meta: PageMetaView }> = ({
         return (
           <ShareRow
             expired={closed}
+            wideActions
             badge={<KindBadge kind="poll" />}
             body={
               <RowBody
