@@ -1,7 +1,7 @@
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 
-export type EventKind = "shortlink" | "file" | "snippet" | "plan";
+export type EventKind = "shortlink" | "file" | "snippet" | "plan" | "poll";
 
 export type EventStats = {
   views: number;

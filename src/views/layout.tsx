@@ -8,6 +8,7 @@ import {
   InboxIcon,
   LinkIcon,
   MenuIcon,
+  VoteIcon,
   XIcon,
 } from "@/components/icons";
 
@@ -17,6 +18,7 @@ export type NavKey =
   | "files"
   | "snippets"
   | "plans"
+  | "polls"
   | "inbox"
   | "dashboard"
   | null;
@@ -29,6 +31,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: "files", label: "Files", href: "/admin/files", icon: FileIcon },
   { key: "snippets", label: "Snippets", href: "/admin/snippets", icon: CodeIcon },
   { key: "plans", label: "Plans", href: "/admin/plans", icon: FileTextIcon },
+  { key: "polls", label: "Polls", href: "/admin/polls", icon: VoteIcon },
   { key: "inbox", label: "Inbox", href: "/admin/inbox", icon: InboxIcon },
 ];
 
@@ -70,14 +73,47 @@ const BODY_BASE =
 const GRAIN =
   "pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(1100px_700px_at_90%_-10%,hsl(215_65%_50%/0.06),transparent_60%),radial-gradient(900px_600px_at_-10%_110%,hsl(35_80%_50%/0.05),transparent_55%)]";
 
+/* Link-preview tags. Slack reads og:* and shows twitter:label/data pairs as extra fields. */
+export type OgMeta = {
+  title: string;
+  description?: string;
+  url: string;
+  image?: string;
+  labels?: [label: string, data: string][];
+};
+
 export const Layout: FC<
-  PropsWithChildren<{ title?: string; authed?: boolean; active?: NavKey }>
-> = ({ title, authed, active, children }) => (
+  PropsWithChildren<{ title?: string; authed?: boolean; active?: NavKey; og?: OgMeta }>
+> = ({ title, authed, active, og, children }) => (
   <html lang="en">
     <head>
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>{title ? `${title} · shareit` : "shareit"}</title>
+      {og && (
+        <>
+          <meta property="og:site_name" content="shareit" />
+          <meta property="og:type" content="website" />
+          <meta property="og:title" content={og.title} />
+          <meta property="og:url" content={og.url} />
+          {og.description && <meta property="og:description" content={og.description} />}
+          {og.description && <meta name="description" content={og.description} />}
+          {og.image && (
+            <>
+              <meta property="og:image" content={og.image} />
+              <meta property="og:image:width" content="1200" />
+              <meta property="og:image:height" content="630" />
+              <meta name="twitter:card" content="summary_large_image" />
+            </>
+          )}
+          {og.labels?.map(([label, data], i) => (
+            <>
+              <meta name={`twitter:label${i + 1}`} content={label} />
+              <meta name={`twitter:data${i + 1}`} content={data} />
+            </>
+          ))}
+        </>
+      )}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
       <link

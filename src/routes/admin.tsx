@@ -30,6 +30,9 @@ admin.get("/", (c) => {
         like(schema.snippets.description, pat),
       )
     : undefined;
+  const pollWhere = pat
+    ? or(like(schema.polls.slug, pat), like(schema.polls.title, pat))
+    : undefined;
   const planWhere = pat
     ? or(like(schema.plans.slug, pat), like(schema.plans.title, pat))
     : undefined;
@@ -58,12 +61,19 @@ admin.get("/", (c) => {
     .where(planWhere)
     .orderBy(desc(schema.plans.updatedAt))
     .all();
+  const polls = db
+    .select()
+    .from(schema.polls)
+    .where(pollWhere)
+    .orderBy(desc(schema.polls.createdAt))
+    .all();
 
   const totalEvents = db.select({ n: sql<number>`count(*)` }).from(schema.events).get()?.n ?? 0;
   const totalLinks = db.select({ n: sql<number>`count(*)` }).from(schema.shortlinks).get()?.n ?? 0;
   const totalFiles = db.select({ n: sql<number>`count(*)` }).from(schema.files).get()?.n ?? 0;
   const totalSnippets = db.select({ n: sql<number>`count(*)` }).from(schema.snippets).get()?.n ?? 0;
   const totalPlans = db.select({ n: sql<number>`count(*)` }).from(schema.plans).get()?.n ?? 0;
+  const totalPolls = db.select({ n: sql<number>`count(*)` }).from(schema.polls).get()?.n ?? 0;
 
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -114,6 +124,13 @@ admin.get("/", (c) => {
       label: p.title,
       createdAt: p.updatedAt,
     })),
+    ...polls.map((p) => ({
+      _kind: "poll" as const,
+      _id: p.id,
+      slug: p.slug,
+      label: p.title,
+      createdAt: p.createdAt,
+    })),
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   const total = merged.length;
@@ -144,6 +161,7 @@ admin.get("/", (c) => {
         files: totalFiles,
         snippets: totalSnippets,
         plans: totalPlans,
+        polls: totalPolls,
         events: totalEvents,
       }}
       trend={{ thisWeek, lastWeek }}

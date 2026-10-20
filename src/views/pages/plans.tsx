@@ -84,7 +84,12 @@ export const Plans: FC<{
             <p class="mt-2 text-[13px] text-(--color-text-soft)">
               Send it in the{" "}
               <code class="font-mono text-(--color-code-inline-text)">X-Share-Key</code> header.
-              Maximum HTML size: {formatSize(maxBytes)}.
+              Works for plans and polls; maximum HTML size: {formatSize(maxBytes)}. Point an AI
+              agent at{" "}
+              <a class="text-(--color-primary) underline underline-offset-2" href="/llms.txt">
+                /llms.txt
+              </a>{" "}
+              and give it this key.
             </p>
           </div>
           <form

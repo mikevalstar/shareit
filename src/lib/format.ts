@@ -29,6 +29,7 @@ export function publicUrl(kind: string, slug: string) {
   if (kind === "shortlink") return `/${slug}`;
   if (kind === "file") return `/f/${slug}`;
   if (kind === "plan") return `/p/${slug}.html`;
+  if (kind === "poll") return `/poll/${slug}`;
   return `/s/${slug}`;
 }
 
@@ -37,4 +38,13 @@ export function escapeHtml(s: string) {
     /[&<>"']/g,
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
   );
+}
+
+export function timeUntil(date: Date, now: Date = new Date()): string {
+  const diff = Math.floor((date.getTime() - now.getTime()) / 1000);
+  if (diff < 60) return "in under a minute";
+  if (diff < 3600) return `in ${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `in ${Math.floor(diff / 3600)}h`;
+  const days = Math.floor(diff / 86400);
+  return `in ${days} day${days === 1 ? "" : "s"}`;
 }

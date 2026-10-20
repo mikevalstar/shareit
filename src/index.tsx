@@ -1,10 +1,12 @@
 import { Hono } from "hono";
 import { serveStatic } from "hono/bun";
 import { createSession, destroySession, isAuthed, verifyPassword } from "./lib/auth";
+import { siteUrl } from "./lib/config";
 import { admin } from "./routes/admin";
 import { filePublic, filesAdmin } from "./routes/files";
 import { inboxAdmin, inboxPublic } from "./routes/inbox";
 import { planApi, planPublic, plansAdmin } from "./routes/plans";
+import { pollApi, pollPublic, pollsAdmin } from "./routes/polls";
 import { shortlinkPublic, shortlinksAdmin } from "./routes/shortlinks";
 import { snippetPublic, snippetsAdmin } from "./routes/snippets";
 import { Home, Login } from "./views/pages";
@@ -17,6 +19,13 @@ app.use(
 );
 
 app.get("/", async (c) => c.html(<Home authed={await isAuthed(c)} />));
+
+/* Agent-facing API guide; it never contains the share key itself. */
+const llmsTxt = (await Bun.file(new URL("./assets/llms.txt", import.meta.url)).text()).replaceAll(
+  "{{SITE_URL}}",
+  siteUrl,
+);
+app.get("/llms.txt", (c) => c.text(llmsTxt));
 
 app.get("/login", (c) => c.html(<Login />));
 app.post("/login", async (c) => {
@@ -37,12 +46,15 @@ app.route("/admin", filesAdmin);
 app.route("/admin", snippetsAdmin);
 app.route("/admin", inboxAdmin);
 app.route("/admin", plansAdmin);
+app.route("/admin", pollsAdmin);
 
 app.route("/api", planApi);
+app.route("/api", pollApi);
 
 app.route("/", filePublic);
 app.route("/", snippetPublic);
 app.route("/", planPublic);
+app.route("/", pollPublic);
 app.route("/", inboxPublic); // before shortlinkPublic — owns /inbox
 app.route("/", shortlinkPublic); // last: catches /:slug
 

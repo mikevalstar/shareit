@@ -1,21 +1,26 @@
 import type { FC } from "hono/jsx";
 import {
   ArrowUpRight as LArrowUpRight,
+  ChartColumn as LBarChart,
   Check as LCheck,
   Code as LCode,
   Copy as LCopy,
+  Download as LDownload,
   File as LFile,
   FileText as LFileText,
   Inbox as LInbox,
   LayoutDashboard as LLayoutDashboard,
   Link as LLink,
+  Lock as LLock,
   Menu as LMenu,
+  Pencil as LPencil,
   Plus as LPlus,
   RotateCcw as LRotate,
   Search as LSearch,
   Trash2 as LTrash,
   TrendingDown as LTrendingDown,
   TrendingUp as LTrendingUp,
+  Vote as LVote,
   X as LX,
 } from "lucide-static";
 
@@ -57,6 +62,15 @@ export const DashboardIcon: FC<{ size?: number }> = ({ size }) => (
 export const FileTextIcon: FC<{ size?: number }> = ({ size }) => (
   <Icon svg={LFileText} size={size} />
 );
+export const DownloadIcon: FC<{ size?: number }> = ({ size }) => (
+  <Icon svg={LDownload} size={size} />
+);
+export const VoteIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LVote} size={size} />;
+export const BarChartIcon: FC<{ size?: number }> = ({ size }) => (
+  <Icon svg={LBarChart} size={size} />
+);
+export const PencilIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LPencil} size={size} />;
+export const LockIcon: FC<{ size?: number }> = ({ size }) => <Icon svg={LLock} size={size} />;
 export const ArrowUpRightIcon: FC<{ size?: number }> = ({ size }) => (
   <Icon svg={LArrowUpRight} size={size} />
 );

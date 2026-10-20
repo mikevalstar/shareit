@@ -27,4 +27,8 @@ export const cls = {
 
   label: "block text-xs font-semibold text-(--color-text) uppercase tracking-widest mb-1.5",
   help: "block mt-1.5 text-[13px] text-(--color-text-soft)",
+
+  /* Rendered Markdown/HTML (poll descriptions and options) — no typography plugin. */
+  prose:
+    "[&_a]:text-(--color-primary) [&_a]:underline [&_a]:underline-offset-2 [&_a:hover]:text-(--color-primary-hover) [&_p]:my-2 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_img]:my-2 [&_img]:max-w-full [&_img]:rounded-lg [&_code]:rounded [&_code]:bg-(--color-code-inline-bg) [&_code]:px-1 [&_code]:font-mono [&_code]:text-[0.9em] [&_code]:text-(--color-code-inline-text) [&_strong]:font-semibold",
 };

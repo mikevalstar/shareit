@@ -1,4 +1,3 @@
-import { randomBytes, timingSafeEqual } from "node:crypto";
 import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { and, desc, eq, like, or, sql } from "drizzle-orm";
@@ -9,44 +8,14 @@ import { requireAuth } from "@/lib/auth";
 import { fullUrl, siteUrl } from "@/lib/config";
 import { newId, newPlanSlug } from "@/lib/ids";
 import { buildPageMeta, likePattern, readPageQuery } from "@/lib/pagination";
+import { getOrCreateShareKey, regenerateShareKey, requireShareKey } from "@/lib/share-key";
 import { track } from "@/lib/track";
 import { type PlanRow, Plans } from "@/views/pages";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./uploads";
 const PLAN_DIR = join(process.env.INBOX_DIR ?? join(UPLOAD_DIR, "inbox"), "plans");
 const MAX_BYTES = Number.parseInt(process.env.PLAN_MAX_BYTES ?? "", 10) || 5 * 1024 * 1024;
-const PLAN_KEY_SETTING = "plan_upload_key";
 const PLAN_SLUG = /^[23456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ]{12}$/;
-
-function generatePlanKey(): string {
-  return `share_${randomBytes(24).toString("base64url")}`;
-}
-
-function getOrCreatePlanKey(): string {
-  const existing = db
-    .select()
-    .from(schema.settings)
-    .where(eq(schema.settings.key, PLAN_KEY_SETTING))
-    .get();
-  if (existing) return existing.value;
-
-  const value = generatePlanKey();
-  db.insert(schema.settings).values({ key: PLAN_KEY_SETTING, value }).onConflictDoNothing().run();
-  return (
-    db.select().from(schema.settings).where(eq(schema.settings.key, PLAN_KEY_SETTING)).get()
-      ?.value ?? value
-  );
-}
-
-function hasPlanKey(presented: string | undefined): boolean {
-  if (!presented) return false;
-  const expected = getOrCreatePlanKey();
-  const actualBuffer = Buffer.from(presented);
-  const expectedBuffer = Buffer.from(expected);
-  return (
-    actualBuffer.length === expectedBuffer.length && timingSafeEqual(actualBuffer, expectedBuffer)
-  );
-}
 
 function titleFromHtml(html: string, slug: string): string {
   const match = html.match(/<title(?:\s[^>]*)?>([\s\S]*?)<\/title\s*>/i);
@@ -78,12 +47,7 @@ async function readPlanBody(c: Context) {
 
 export const planApi = new Hono();
 
-planApi.use("*", async (c, next) => {
-  if (!hasPlanKey(c.req.header("x-share-key"))) {
-    return c.json({ error: "Invalid or missing X-Share-Key header" }, 401);
-  }
-  await next();
-});
+planApi.use("*", requireShareKey);
 
 planApi.post("/plans", async (c) => {
   const body = await readPlanBody(c);
@@ -170,7 +134,7 @@ plansAdmin.get("/plans", (c) => {
   return c.html(
     <Plans
       rows={rows}
-      uploadKey={getOrCreatePlanKey()}
+      uploadKey={getOrCreateShareKey()}
       maxBytes={MAX_BYTES}
       now={now}
       meta={meta}
@@ -179,11 +143,7 @@ plansAdmin.get("/plans", (c) => {
 });
 
 plansAdmin.post("/plans/key/regenerate", (c) => {
-  const value = generatePlanKey();
-  db.insert(schema.settings)
-    .values({ key: PLAN_KEY_SETTING, value })
-    .onConflictDoUpdate({ target: schema.settings.key, set: { value } })
-    .run();
+  regenerateShareKey();
   return c.redirect("/admin/plans");
 });
 

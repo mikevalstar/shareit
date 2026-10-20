@@ -1,0 +1,118 @@
+# shareit
+
+> shareit ({{SITE_URL}}) is a personal sharing server. With its share key, an agent can publish HTML
+> plans (living documents updated in place) and run polls (single- or multi-choice, live results).
+
+All API requests go to `{{SITE_URL}}/api/...` and need the share key in the `X-Share-Key` header. The
+owner gives you the key; it is shown on `{{SITE_URL}}/admin/plans`. Never put the key in a plan, a
+poll, or any URL. Errors are JSON `{ "error": "..." }`: `400` bad input, `401` bad key, `404` not
+found, `409` slug taken, `413` too large.
+
+## Plans
+
+A plan is one self-contained HTML document, served at `{{SITE_URL}}/p/<slug>.html`. Its `<title>`
+becomes the plan's name. It is sandboxed: inline CSS/JS and `https:` assets work, forms do not post.
+
+Create — the body is the raw HTML, response is `201`:
+
+```bash
+curl --fail-with-body -X POST \
+  -H "X-Share-Key: $SHAREIT_KEY" \
+  -H "Content-Type: text/html; charset=utf-8" \
+  --data-binary @plan.html \
+  {{SITE_URL}}/api/plans
+# {"slug":"Ab3def4Gh5jk","url":"{{SITE_URL}}/p/Ab3def4Gh5jk.html","updateUrl":"{{SITE_URL}}/api/plans/Ab3def4Gh5jk.html"}
+```
+
+Update — `PUT` the full replacement HTML to `updateUrl`; the public URL stays the same. Keep the
+`updateUrl` from the create response if you will revise the plan later.
+
+```bash
+curl --fail-with-body -X PUT \
+  -H "X-Share-Key: $SHAREIT_KEY" \
+  -H "Content-Type: text/html; charset=utf-8" \
+  --data-binary @plan.html \
+  {{SITE_URL}}/api/plans/Ab3def4Gh5jk.html
+```
+
+## Polls
+
+A poll is served at `{{SITE_URL}}/poll/<slug>`; share that URL (it unfurls with a preview card in
+Slack). Voters give their name once and can change their vote until the poll closes. JSON in, JSON
+out.
+
+Fields:
+
+- `title` (string, required) — the question.
+- `options` (array, required, 2–50) — each is Markdown or HTML, e.g. `"[Go-karting](https://…) — $45"`.
+  On create, plain strings. On update, see "Changing options" below.
+- `description` (string or null) — Markdown or HTML shown above the options: budget, dates, context.
+- `slug` (string) — custom URL part, letters/numbers/`-`/`_`, max 40. Random if omitted.
+- `multi` (boolean, default `false`) — `true` lets voters pick any number of options.
+- `closesAt` (ISO 8601 with offset, or null) — when voting stops. `null` means open until closed.
+
+Create — response is `201` with the full poll:
+
+```bash
+curl --fail-with-body -X POST \
+  -H "X-Share-Key: $SHAREIT_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "What should we do for the November team event?",
+    "description": "Budget is **$60/person**. Pick everything you would enjoy.",
+    "slug": "november-event",
+    "multi": true,
+    "closesAt": "2026-11-01T17:00:00-04:00",
+    "options": [
+      "[Go-karting](https://example.com/karts) at the speedway",
+      "Escape room — two rooms of 6",
+      "Cooking class"
+    ]
+  }' \
+  {{SITE_URL}}/api/polls
+```
+
+Poll response shape (create, read, and update all return this):
+
+```json
+{
+  "id": "…",
+  "slug": "november-event",
+  "title": "What should we do for the November team event?",
+  "description": "Budget is **$60/person**. Pick everything you would enjoy.",
+  "multi": true,
+  "closesAt": "2026-11-01T21:00:00.000Z",
+  "closed": false,
+  "url": "{{SITE_URL}}/poll/november-event",
+  "apiUrl": "{{SITE_URL}}/api/polls/november-event",
+  "voterCount": 2,
+  "options": [{ "id": "opt1…", "content": "[Go-karting](…) at the speedway", "votes": 2 }],
+  "voters": [{ "name": "Sam", "optionIds": ["opt1…"], "votedAt": "2026-10-21T14:03:00.000Z" }]
+}
+```
+
+Read results: `GET {{SITE_URL}}/api/polls/<slug>`. List all polls: `GET {{SITE_URL}}/api/polls`
+(slug, title, closed, url, apiUrl, createdAt for each).
+
+Update: `PATCH {{SITE_URL}}/api/polls/<slug>` with only the fields to change.
+
+- Close now: `{ "closesAt": "<current time, ISO 8601>" }`. Reopen: `{ "closesAt": null }`.
+- Changing options: `options` replaces the whole list, in order. To keep an option and its votes,
+  pass `{ "id": "<option id from GET>", "content": "…" }`; plain strings are new options. Any
+  existing option you leave out is deleted with its votes — GET the poll first and send back the
+  ids you want to keep.
+
+```bash
+curl --fail-with-body -X PATCH \
+  -H "X-Share-Key: $SHAREIT_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "options": [{ "id": "opt1…", "content": "Go-karting (Nov 14)" }, "Bowling"] }' \
+  {{SITE_URL}}/api/polls/november-event
+```
+
+## Tips
+
+- One question per poll. For a team event, poll the activity first, then a second poll for the date.
+- Keep option text short; put details in links or the description. The first ~60 characters of each
+  option show on the Slack preview card.
+- Tell the owner the poll `url` to share, not the `apiUrl`.

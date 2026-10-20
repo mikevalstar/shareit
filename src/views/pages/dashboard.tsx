@@ -35,7 +35,14 @@ const SIDE_VALUE =
 
 export const Dashboard: FC<{
   items: AdminListItem[];
-  stats: { links: number; files: number; snippets: number; plans: number; events: number };
+  stats: {
+    links: number;
+    files: number;
+    snippets: number;
+    plans: number;
+    polls: number;
+    events: number;
+  };
   trend: { thisWeek: number; lastWeek: number };
   days30: number[];
   meta: PageMetaView;
@@ -63,6 +70,9 @@ export const Dashboard: FC<{
             <a class="ghost" href="/admin/snippets">
               <PlusIcon /> Snippet
             </a>
+            <a class="ghost" href="/admin/new/poll">
+              <PlusIcon /> Poll
+            </a>
             <a class="ghost" href="/admin/plans">
               Plans
             </a>
@@ -86,6 +96,10 @@ export const Dashboard: FC<{
               <div class={SIDE_CELL}>
                 <div class={SIDE_LABEL}>Plans</div>
                 <div class={SIDE_VALUE}>{stats.plans}</div>
+              </div>
+              <div class={SIDE_CELL}>
+                <div class={SIDE_LABEL}>Polls</div>
+                <div class={SIDE_VALUE}>{stats.polls}</div>
               </div>
             </div>
             <div>
@@ -117,7 +131,7 @@ export const Dashboard: FC<{
         <FilterRow
           basePath="/admin"
           q={meta.q}
-          placeholder="Search links, files, snippets, plans…"
+          placeholder="Search links, files, snippets, plans, polls…"
           total={meta.total}
           noun="item"
         />
@@ -189,5 +203,6 @@ function prefixFor(kind: string): string {
   if (kind === "shortlink") return "/";
   if (kind === "file") return "/f/";
   if (kind === "plan") return "/p/";
+  if (kind === "poll") return "/poll/";
   return "/s/";
 }

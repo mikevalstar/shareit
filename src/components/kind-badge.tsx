@@ -5,6 +5,7 @@ import {
   FileText as LFileText,
   Inbox as LInbox,
   Link as LLink,
+  Vote as LVote,
 } from "lucide-static";
 import { Icon } from "./icons";
 
@@ -14,6 +15,7 @@ const KIND_BG: Record<string, string> = {
   shortlink: "bg-(--color-primary)",
   inbox: "bg-(--color-text)",
   plan: "bg-(--color-accent-teal)",
+  poll: "bg-(--color-accent-rose)",
 };
 
 export const KindBadge: FC<{ kind: string; size?: number }> = ({ kind, size = 14 }) => {
@@ -26,7 +28,9 @@ export const KindBadge: FC<{ kind: string; size?: number }> = ({ kind, size = 14
           ? LInbox
           : kind === "plan"
             ? LFileText
-            : LLink;
+            : kind === "poll"
+              ? LVote
+              : LLink;
   return (
     <span
       class={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white ${KIND_BG[kind] ?? KIND_BG.shortlink}`}

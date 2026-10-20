@@ -1,12 +1,8 @@
 import type { Context } from "hono";
 import { db, schema } from "@/db";
+import type { EventKind } from "./analytics";
 
-export function track(
-  c: Context,
-  kind: "shortlink" | "file" | "snippet" | "plan",
-  resourceId: string,
-  action: string,
-) {
+export function track(c: Context, kind: EventKind, resourceId: string, action: string) {
   const ip =
     c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ?? c.req.header("x-real-ip") ?? null;
   db.insert(schema.events)
