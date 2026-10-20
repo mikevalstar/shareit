@@ -39,6 +39,7 @@ CLAUDE.local.md
 # shareit
 data/
 uploads/
+/inbox/
 public/app.css
 *.db
 *.db-journal
