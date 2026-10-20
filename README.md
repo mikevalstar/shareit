@@ -11,7 +11,7 @@ Built with [Hono](https://hono.dev) + JSX SSR, SQLite via [Drizzle ORM](https://
 - **Snippets** at `/s/<slug>` — multi-file, syntax-highlighted via highlight.js.
 - **Inbox** at `/inbox` — a public file drop with private admin downloads.
 - **Plans** at `/p/<slug>.html` — HTML documents pushed by API and updated in place.
-- **Polls** at `/poll/<slug>` — single- or multi-choice, Markdown/HTML options, live results.
+- **Polls** at `/poll/<slug>` — single- or multi-choice, Markdown/HTML options, results that update live.
   Voters name themselves once and are remembered by cookie, so they can change their vote
   until the poll closes (manually or at a scheduled time). Shared links unfurl in Slack with
   a generated preview image. The admin gets per-voter results, a CSV export, and a ranked
@@ -60,6 +60,7 @@ Visit `http://localhost:3213`, log in, and start sharing.
 | `/p/:slug.html`          | Public HTML plan                 |
 | `/poll/:slug`            | Public poll (view + vote)        |
 | `/poll/:slug/og.png`     | Generated link-preview image     |
+| `/poll/:slug/tally.json` | Live counts the poll page polls (untracked) |
 | `/llms.txt`              | API guide for AI agents (no secrets) |
 
 ## Share API (plans + polls)

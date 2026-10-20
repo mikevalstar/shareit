@@ -417,6 +417,16 @@ pollPublic.post("/poll/:slug", async (c) => {
   return c.redirect(`/poll/${poll.slug}?voted=1`, 303);
 });
 
+/* Live-update feed for the public page. Same numbers the page already shows,
+   and deliberately not tracked — polling it every 30s would swamp the view count. */
+pollPublic.get("/poll/:slug/tally.json", (c) => {
+  const poll = bySlug(c.req.param("slug"));
+  if (!poll) return c.json({ error: "Poll not found" }, 404);
+  const tally = loadTally(poll.id);
+  c.header("Cache-Control", "no-store");
+  return c.json({ voters: tally.voters, counts: Object.fromEntries(tally.counts) });
+});
+
 pollPublic.get("/poll/:slug/og.png", async (c) => {
   const poll = bySlug(c.req.param("slug"));
   if (!poll) return c.notFound();

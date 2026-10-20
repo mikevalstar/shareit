@@ -38,9 +38,7 @@ export const PollView: FC<PollViewProps> = (p) => {
         <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm opacity-90">
           <span>{p.multi ? "Pick any" : "Pick one"}</span>
           <span class="opacity-60">·</span>
-          <span>
-            {formatNumber(p.voterCount)} {p.voterCount === 1 ? "person" : "people"} voted
-          </span>
+          <span data-voters>{votedLabel(p.voterCount)}</span>
           <span class="opacity-60">·</span>
           <span>{pollStatus(p.closesAt, p.now)}</span>
           {p.admin && (
@@ -110,6 +108,9 @@ export const PollView: FC<PollViewProps> = (p) => {
           </form>
         </Card>
       </div>
+      {!closed && (
+        <script dangerouslySetInnerHTML={{ __html: liveTally(`/poll/${p.slug}/tally.json`) }} />
+      )}
     </Layout>
   );
 };
@@ -122,9 +123,13 @@ const OptionRow: FC<{ option: PollOptionView; multi: boolean; total: number }> =
 }) => {
   const pct = total ? Math.round((o.count / total) * 100) : 0;
   return (
-    <label class="relative flex cursor-pointer items-start gap-3 overflow-hidden rounded-xl border border-(--color-border) bg-(--color-bg-card) px-4 py-3 hover:border-(--color-border-hover) has-[:checked]:border-(--color-primary) has-[:disabled]:cursor-default has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-(--color-primary-light)">
+    <label
+      data-option={o.id}
+      class="relative flex cursor-pointer items-start gap-3 overflow-hidden rounded-xl border border-(--color-border) bg-(--color-bg-card) px-4 py-3 hover:border-(--color-border-hover) has-[:checked]:border-(--color-primary) has-[:disabled]:cursor-default has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-(--color-primary-light)"
+    >
       <span
         aria-hidden="true"
+        data-bar
         class="pointer-events-none absolute inset-y-0 left-0 bg-(--color-primary-light) transition-[width] duration-300 motion-reduce:transition-none"
         style={`width:${pct}%`}
       />
@@ -141,12 +146,40 @@ const OptionRow: FC<{ option: PollOptionView; multi: boolean; total: number }> =
       />
       <span class="relative flex shrink-0 items-center gap-2 font-mono text-sm tabular-nums text-(--color-text-muted)">
         {o.mine && <Pill>You</Pill>}
-        {o.count}
-        <span class="text-(--color-text-soft)">{pct}%</span>
+        <span data-count>{o.count}</span>
+        <span data-pct class="text-(--color-text-soft)">
+          {pct}%
+        </span>
       </span>
     </label>
   );
 };
+
+const votedLabel = (n: number) => `${formatNumber(n)} ${n === 1 ? "person" : "people"} voted`;
+
+/* Patches counts, bars and the voter line in place every 30s — never the form,
+   so a half-filled ballot survives. Reads tally.json, which isn't tracked as a view. */
+const liveTally = (url: string) => `
+  const refreshTally = async () => {
+    if (document.hidden) return;
+    try {
+      const res = await fetch(${JSON.stringify(url)}, { cache: 'no-store' });
+      if (!res.ok) return;
+      const { voters, counts } = await res.json();
+      const voted = document.querySelector('[data-voters]');
+      if (voted) voted.textContent = voters.toLocaleString('en-US') + (voters === 1 ? ' person' : ' people') + ' voted';
+      document.querySelectorAll('[data-option]').forEach((row) => {
+        const n = counts[row.dataset.option] ?? 0;
+        const pct = voters ? Math.round((n / voters) * 100) : 0;
+        row.querySelector('[data-count]').textContent = String(n);
+        row.querySelector('[data-pct]').textContent = pct + '%';
+        row.querySelector('[data-bar]').style.width = pct + '%';
+      });
+    } catch {}
+  };
+  setInterval(refreshTally, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshTally(); });
+`;
 
 export function pollStatus(closesAt: Date | null, now: Date): string {
   if (!closesAt) return "Open";
